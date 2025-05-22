@@ -207,6 +207,7 @@ export default function ReservationForm({
                 setCompletedForm(true);
                 setFormData(initialFormData);
                 setFormError(false);
+                setStep(4)
                 // if (customer && submitType !== "sendQuote") {
                 //   // Send message to parent window to redirect to payment page
                 //   const paymentUrl = `${process.env.NEXT_PUBLIC_PAYMENT_LINK}/paymentcompany?id=${res.data?._id}&companyId=${process.env.NEXT_PUBLIC_COMPANYID}`
@@ -541,7 +542,7 @@ export default function ReservationForm({
                                             setCompanyDetails={setCompanyDetails}
                                     />
                                 )}
-                                {completedForm === true && step === 3 ? (
+                                {completedForm === true && step === 4 ? (
                                     <>
                                         <ThankYouPage
                                             formData={finalData}
