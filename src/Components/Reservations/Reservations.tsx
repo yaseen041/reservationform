@@ -228,10 +228,7 @@ export default function ReservationForm({
 
     const renderProgressBar = () => {
         
-
-
-
-        return (
+     return (
           <div className="w-full max-w-4xl mx-auto mt-8 mb-8 ">
       {/* Stepper */}
       <div className="flex items-start justify-between relative">
