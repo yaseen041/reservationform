@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Label } from "../../Common/FormComponents/Label";
 import { Input } from "../../Common/FormComponents/Input";
 import { Button } from "../../Common/FormComponents/Button";
 
-import { FormData, ICustomers, PlacePrediction, Vehicle } from "@/Types";
+import { FormData, ICustomers, Vehicle } from "@/Types";
 
 import PhoneInput from "react-phone-input-2";
 import "react-datepicker/dist/react-datepicker.css";
@@ -15,8 +15,6 @@ import {
     AdditionalPayment,
     IAdditionalPayment,
 } from "@/Components/Common/AdditionalCharges";
-import { PlacesAutocomplete } from "@/Components/ui/places-autocomplete";
-import DatePicker from "react-datepicker";
 
 interface Step3Props {
     formData: FormData;
@@ -39,7 +37,6 @@ interface Step3Props {
     step: number
     steps: string[]
     setCompanyDetails: React.Dispatch<React.SetStateAction<CompanyDetailsType>>
-    companyDetails: any
 }
 
 interface CompanyDetailsType {
@@ -62,15 +59,8 @@ export const Step3: React.FC<Step3Props> = ({
     step,
     steps,
     setCompanyDetails,
-    companyDetails
 }) => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-    const [isFocused, setIsFocused] = useState(false);
-    console.log(isFocused);
-
-
-
     const [minimumHoursWarning, setMinimumHoursWarning] = useState<{
         vehicle: null | Vehicle;
         show: boolean;
@@ -132,10 +122,6 @@ export const Step3: React.FC<Step3Props> = ({
         // if (!formData.vehicleType)
         //     newErrors.vehicleType = "Vehicle type is required";
 
-
-        const pickupDateTime = new Date(
-            `${formData.pickupDate}T${formData.pickupTime}`,
-        );
 
 
         if (!formData.name) newErrors.name = "Name is required";

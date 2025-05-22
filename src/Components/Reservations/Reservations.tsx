@@ -227,8 +227,7 @@ export default function ReservationForm({
     }
 
     const renderProgressBar = () => {
-        const totalSteps = 3
-        const progress = (step / totalSteps) * 100
+        
 
 
 
@@ -543,8 +542,6 @@ export default function ReservationForm({
                                             step={step}
                                             steps={steps}
                                             setCompanyDetails={setCompanyDetails}
-                                            companyDetails={companyDetails}
-                                    
                                     />
                                 )}
                                 {completedForm === true && step === 3 ? (

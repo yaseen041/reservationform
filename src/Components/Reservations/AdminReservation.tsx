@@ -13,7 +13,7 @@ import {
 } from "@/Types"
 import { Step1 } from "./ReservationFormSteps/Step1"
 import { Step2 } from "./ReservationFormSteps/Step2"
-import { Step3 } from "./ReservationFormSteps/Step4"
+import { Step4 } from "./ReservationFormSteps/Step4"
 import axios from "axios"
 import { FileWarningIcon } from "lucide-react"
 import { ToastContainer } from "react-toastify"
@@ -363,7 +363,7 @@ export default function AdminReservation({
                                         states={states}
                                         serviceType={serviceType}
                                         setStep1Error={setStep1Error}
-                                    />
+                                        vehicles={vehicles} steps={[]} step={0} companyDetails={{}}                                    />
                                 )}
                                 {step === 2 && (
                                     <>
@@ -386,9 +386,8 @@ export default function AdminReservation({
                                                     price,
                                                     additionalPayments,
                                                 }))
-                                            }}
-                                            setStep2Error={setStep2Error}
-                                        />
+                                            } }
+                                            setStep2Error={setStep2Error} step={0} steps={[]} setCompanyDetails={()=>{}} companyDetails={{ luggageField:false, states: [] }}                                        />
                                     </>
                                 )}
 
@@ -403,7 +402,7 @@ export default function AdminReservation({
                                     </>
                                 ) : step === 3 ? (
                                     <>
-                                        <Step3 formData={formData} setStep={setStep} loader={loader} customer={customer} />
+                                        <Step4 formData={formData} setStep={setStep} loader={loader} customer={customer} />
                                     </>
                                 ) : null}
                             </form>

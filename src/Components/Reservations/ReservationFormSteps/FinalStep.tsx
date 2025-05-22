@@ -46,7 +46,7 @@ export const ThankYouPage = ({
         </h1>
         <p className="text-center text-[16px] text-[#475467] " >Your quote request has been received against Order ID: {formData.orderId}</p>
         <div className="space-y-4 bg-[#F3F7FE] rounded-lg p-5 ">
-          <p className="font-bold" >What's Next?</p>
+          <p className="font-bold" >What&rsquo;s Next?</p>
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -56,7 +56,7 @@ export const ThankYouPage = ({
             <div>
             <Calendar className="h-5 w-5 text-[#002599]" />
             </div>
-            <span>We've received your request and are processing it.</span>
+           <span>We&rsquo;ve received your request and are processing it.</span>
           </motion.div>
 
           <motion.div
@@ -79,7 +79,7 @@ export const ThankYouPage = ({
             <div >
             <Mail className="h-5 w-5 text-[#002599]" />
             </div>
-            <span>You'll receive an email with your quote soon. Please check your spam folder if you don't see it in your inbox.</span>
+           <span>You&rsquo;ll receive an email with your quote soon. Please check your spam folder if you don&rsquo;t see it in your inbox.</span>
           </motion.div>
            <motion.div
             initial={{ x: -20, opacity: 0 }}

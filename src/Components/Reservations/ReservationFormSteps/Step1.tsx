@@ -15,14 +15,10 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "../../Common/FormComponents/Radio-Group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../Common/FormComponents/Tooltip";
+
 import MinimumHoursWarning from "./MinimumHoursWarning";
-import { HelpCircle } from "lucide-react";
+
+
 interface Step1Props {
   formData: FormData;
   handleInputChange: (
@@ -39,7 +35,7 @@ interface Step1Props {
   steps: string[]
   step: number
   vehicles: Vehicle[];
-  companyDetails: any
+  companyDetails: { luggageField?: boolean }
 }
 
 export const Step1: React.FC<Step1Props> = ({
@@ -47,7 +43,6 @@ export const Step1: React.FC<Step1Props> = ({
   handleInputChange,
   handleSelectChange,
   setStep,
-  states,
   airports,
   serviceType,
   setStep1Error,
@@ -58,7 +53,6 @@ export const Step1: React.FC<Step1Props> = ({
 
 }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [defaultState, setDefaultState] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [minimumHoursWarning, setMinimumHoursWarning] = useState<{
     vehicle: null | Vehicle;
@@ -80,7 +74,7 @@ export const Step1: React.FC<Step1Props> = ({
 
         if (res.data.defaultState) {
           console.log("here");
-          setDefaultState(res.data.defaultState);
+        
         }
       })
       .catch((e) => {

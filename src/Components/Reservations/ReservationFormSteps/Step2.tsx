@@ -3,28 +3,15 @@ import { Label } from "../../Common/FormComponents/Label";
 import { Input } from "../../Common/FormComponents/Input";
 import { Button } from "../../Common/FormComponents/Button";
 import {
-  RadioGroup,
-  RadioGroupItem,
-} from "../../Common/FormComponents/Radio-Group";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "../../Common/FormComponents/Select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../Common/FormComponents/Tooltip";
-import { HelpCircle } from "lucide-react";
+
 import { FormData, ICustomers, PlacePrediction, Vehicle } from "@/Types";
-
-import PhoneInput from "react-phone-input-2";
 import "react-datepicker/dist/react-datepicker.css";
-
 import "react-phone-input-2/lib/bootstrap.css";
 import axios from "axios";
 import MinimumHoursWarning from "./MinimumHoursWarning";
@@ -59,7 +46,7 @@ interface Step2Props {
   step:number
   steps:string[]
   setCompanyDetails: React.Dispatch<React.SetStateAction<CompanyDetailsType>>
-  companyDetails:any
+  companyDetails: CompanyDetailsType
 }
 
 interface CompanyDetailsType {
@@ -73,7 +60,6 @@ export const Step2: React.FC<Step2Props> = ({
   handleSelectChange,
   setStep,
   airports,
-  vehicles,
   states,
   customer,
   additionalPayments,
@@ -86,7 +72,7 @@ export const Step2: React.FC<Step2Props> = ({
   steps,
   setCompanyDetails,
   companyDetails
-}) => {
+}: Step2Props) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [isFocused, setIsFocused] = useState(false);
@@ -138,10 +124,7 @@ export const Step2: React.FC<Step2Props> = ({
     setIsFocused(false);
   };
 
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  
 
   const validateStep2 = () => {
     const newErrors: { [key: string]: string } = {};
@@ -346,50 +329,50 @@ export const Step2: React.FC<Step2Props> = ({
     return date ? date.toISOString().split("T")[0] : ""; // Converts to "yyyy-mm-dd"
   };
 
-  const renderSummary = () => {
-    switch (formData.serviceType) {
-      case "One-Way Trip to the Airport":
-        return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffAirport}.`;
-      case "One-Way Trip from the Airport":
-        return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupAirport} to ${formData.dropoffCity}, ${formData.dropoffState}.`;
-      case "Round Trip Involving an Airport":
-        if (formData.roundTripFirstLeg === "To Airport") {
-          return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffAirport} and back.`;
-        } else {
-          return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupAirport} to ${formData.dropoffCity}, ${formData.dropoffState} and back.`;
-        }
-      case "One-Way Trip Not Involving an Airport":
-        return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffCity}, ${formData.dropoffState}.`;
-      case "Round Trip Not Involving an Airport":
-        return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffCity}, ${formData.dropoffState} and back.`;
-      case "Hourly Trip":
-        return `Please fill out this form to get a Quote for your ${formData.tripDuration}-hour trip starting from ${formData.pickupCity}, ${formData.pickupState}.`;
-      default:
-        return "Please fill out this form to get a Quote for your trip.";
-    }
-  };
+  // const renderSummary = () => {
+  //   switch (formData.serviceType) {
+  //     case "One-Way Trip to the Airport":
+  //       return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffAirport}.`;
+  //     case "One-Way Trip from the Airport":
+  //       return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupAirport} to ${formData.dropoffCity}, ${formData.dropoffState}.`;
+  //     case "Round Trip Involving an Airport":
+  //       if (formData.roundTripFirstLeg === "To Airport") {
+  //         return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffAirport} and back.`;
+  //       } else {
+  //         return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupAirport} to ${formData.dropoffCity}, ${formData.dropoffState} and back.`;
+  //       }
+  //     case "One-Way Trip Not Involving an Airport":
+  //       return `Please fill out this form to get a Quote for your One-Way trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffCity}, ${formData.dropoffState}.`;
+  //     case "Round Trip Not Involving an Airport":
+  //       return `Please fill out this form to get a Quote for your Round trip from ${formData.pickupCity}, ${formData.pickupState} to ${formData.dropoffCity}, ${formData.dropoffState} and back.`;
+  //     case "Hourly Trip":
+  //       return `Please fill out this form to get a Quote for your ${formData.tripDuration}-hour trip starting from ${formData.pickupCity}, ${formData.pickupState}.`;
+  //     default:
+  //       return "Please fill out this form to get a Quote for your trip.";
+  //   }
+  // };
 
-  const renderTripDetailsHeader = () => {
-    switch (formData.serviceType) {
-      case "One-Way Trip to the Airport":
-        return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffAirport}?`;
-      case "One-Way Trip from the Airport":
-        return `When do you wish to be picked up at ${formData.pickupAirport} to be brought to ${formData.dropoffCity}?`;
-      case "Round Trip Involving an Airport":
-        if (formData.roundTripFirstLeg === "To Airport") {
-          return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffAirport}?`;
-        } else {
-          return `When do you wish to be picked up at ${formData.pickupAirport} to be brought to ${formData.dropoffCity}?`;
-        }
-      case "One-Way Trip Not Involving an Airport":
-      case "Round Trip Not Involving an Airport":
-        return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffCity}?`;
-      case "Hourly Trip":
-        return `When do you wish to start your ${formData.tripDuration}-hour trip from ${formData.pickupCity}?`;
-      default:
-        return "When do you wish to be picked up?";
-    }
-  };
+  // const renderTripDetailsHeader = () => {
+  //   switch (formData.serviceType) {
+  //     case "One-Way Trip to the Airport":
+  //       return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffAirport}?`;
+  //     case "One-Way Trip from the Airport":
+  //       return `When do you wish to be picked up at ${formData.pickupAirport} to be brought to ${formData.dropoffCity}?`;
+  //     case "Round Trip Involving an Airport":
+  //       if (formData.roundTripFirstLeg === "To Airport") {
+  //         return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffAirport}?`;
+  //       } else {
+  //         return `When do you wish to be picked up at ${formData.pickupAirport} to be brought to ${formData.dropoffCity}?`;
+  //       }
+  //     case "One-Way Trip Not Involving an Airport":
+  //     case "Round Trip Not Involving an Airport":
+  //       return `When do you wish to be picked up in ${formData.pickupCity} to be brought to ${formData.dropoffCity}?`;
+  //     case "Hourly Trip":
+  //       return `When do you wish to start your ${formData.tripDuration}-hour trip from ${formData.pickupCity}?`;
+  //     default:
+  //       return "When do you wish to be picked up?";
+  //   }
+  // };
 
   const renderReturnDetailsHeader = () => {
     if (formData.serviceType === "Round Trip Involving an Airport") {
@@ -558,7 +541,7 @@ export const Step2: React.FC<Step2Props> = ({
     return `${month}/${day}/${year}`;
   }
 
-  const [selectedVehicle, setSelectedVehicle] = useState("");
+  
   return (
     <>
       <div className="space-y-6" aria-label="Reservation Form Step 2">
