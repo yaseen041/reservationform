@@ -1,0 +1,372 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import 'swiper/css';
+@import 'swiper/css/navigation';
+@import 'swiper/css/pagination';
+
+:root {
+    --yelp-red: #d32323;
+    --yelp-red-dark: #af1d1d;
+  }
+  
+  .bg-yelp-red {
+    background-color: var(--yelp-red);
+  }
+  
+  .hover\:bg-yelp-red-dark:hover {
+    background-color: var(--yelp-red-dark);
+  }
+  
+  .text-yelp-red {
+    color: var(--yelp-red);
+  }
+  
+  .fill-yelp-red {
+    fill: var(--yelp-red);
+  }
+  
+  .focus\:ring-yelp-red:focus {
+    --tw-ring-color: var(--yelp-red);
+  }
+  
+  
+.mySwiper{
+    height: 200px;
+}
+
+.react-datepicker-wrapper{
+  width: 98%;
+}
+
+.react-datepicker__input-container{
+  position: relative !important;
+  width: 100% !important;
+  border-radius: 0.375rem !important; /* rounded-md */
+  border: 1px solid #ebebeb !important; /* border-gray-300 */
+  padding: 0.5rem 0.75rem !important; /* px-3 py-2 */
+  transition: box-shadow 0.2s ease-in-out !important; /* smooth focus transition */
+}
+
+
+.react-datepicker__input-container input{
+  width: 100% !important;
+  outline: none;
+  cursor: pointer;
+}
+
+
+@media screen and (max-width: 500px){
+  .flex-css{
+    flex-wrap: wrap !important;
+    flex-direction: column;
+  }
+  .react-datepicker-wrapper{
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 500px){
+    .whychoose{
+        padding-top: 0px !important;
+    }
+
+    .navbar-logo{
+      width: 70px !important;
+    }
+
+    .header-heading{
+      font-size: 22px;
+      width: 85%;
+      margin: auto;
+      margin-bottom: 20px;
+    }
+
+    .navbar-heading{
+      font-size: 18px;
+    }
+
+    .header-para{
+      font-size: 17px;
+      line-height: 22px;
+      width: 85%;
+      margin: auto;
+    }
+
+    .form-control {
+      width: 95% !important;
+    }
+}
+
+
+.dateInput{
+  display: none;
+}
+
+
+@media screen and (max-width: 500px){
+  .hourly-media{
+    width: 340px;
+  }
+
+  .dateContainer{
+    display: none;
+  }
+
+  .dateInput{
+    display: block;
+  }
+}
+
+.datePickerContainer {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dateInput {
+  width: 100%;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: transparent;
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.placeholder {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757575;
+  pointer-events: none;
+}
+
+/* Hide the clear button in Edge */
+.dateInput::-ms-clear {
+  display: none;
+}
+
+/* Hide the reveal password button in Edge */
+.dateInput::-ms-reveal {
+  display: none;
+}
+
+/* Hide default placeholder */
+.dateInput::placeholder {
+  color: transparent;
+}
+
+.timeInput{
+  display: none;
+}
+
+
+.timePickerContainer {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.timeInput {
+  width: 100%;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: transparent;
+}
+
+.timeInput::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media screen and (max-width: 500px) {
+  .timeContainer {
+    display: none;
+  }
+
+  .timeInput {
+    display: block;
+  }
+}
+
+@media screen and (max-width: 400px){
+  .grid-css{
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+}
+
+.mobile-time {
+  appearance: none; /* Removes default styles */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+
+  color: transparent; /* Initially hide value */
+
+}
+
+/* Show value only when time is selected */
+.mobile-time:focus,
+.mobile-time:valid {
+  color: #333;
+}
+
+/* Optional focus styling */
+.mobile-time:focus {
+  border-color: #4a90e2;
+  outline: none;
+}
+
+.veh-radio{
+  border: 1px solid #333 !important;
+}
+
+.veh-radio:checked + label {
+  background-color: #f0fdfa; /* Light subtle greenish highlight */
+  border: 1px solid #34d399; /* Soft teal border */
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Smooth hover effect */
+.veh-container:hover, .highlightedVeh {
+  background-color: #f7f7f7;
+  transition: background-color 0.2s ease;
+}
+
+@media screen and (max-width: 380px) {
+  .label-flex{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.select-popup{
+  max-height: 200px !important;
+  overflow: scroll !important;
+}
+
+@media screen and (max-width: 400px){
+  .select-popup{
+    width: 83% !important;
+    overflow: scroll !important;
+  }
+}
+
+
+/* Services select scrollbar styles */
+.services-mobile-scroll {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.services-viewport-scroll {
+  max-height: 180px !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  /* iOS specific styles */
+  -webkit-appearance: none !important;
+  padding-bottom: 10px !important; /* Add space for the gradient indicator */
+}
+
+/* Desktop scrollbar styles */
+@media (min-width: 401px) {
+  .services-viewport-scroll::-webkit-scrollbar {
+    width: 6px !important;
+    display: block !important;
+  }
+
+  .services-viewport-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 3px !important;
+  }
+
+  .services-viewport-scroll::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 400px) {
+  .services-viewport-scroll {
+    max-height: 150px !important;
+    /* Force momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch !important;
+    /* Show scrolling is possible */
+    overflow-y: auto !important;
+  }
+
+  /* iOS scroll indicator */
+  .ios-scroll-indicator {
+    opacity: 0.7 !important;
+    z-index: 10 !important;
+    background-color: #333;
+    animation: subtle-bounce1 1.5s ease-in-out 0.5s 1;
+    visibility: hidden;
+  }
+
+  @keyframes subtle-bounce1 {
+    0%,
+    100% {
+      transform: translateY(0);
+      visibility: visible;
+    }
+    20% {
+      transform: translateY(15px);
+      visibility: visible;
+    }
+    40% {
+      transform: translateY(0);
+      visibility: visible;
+    }
+  }
+
+  /* Add a subtle bounce effect to indicate scrollability */
+  .services-viewport-scroll {
+    animation: subtle-bounce 1.5s ease-in-out 0.5s 1;
+  }
+
+
+  @keyframes subtle-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(10px);
+    }
+    40% {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Dark mode adjustments */
+.dark .ios-scroll-indicator {
+  background: linear-gradient(to top, rgba(15, 15, 15, 1), transparent) !important;
+}
+
+.react-tel-input .form-control{
+  height: 20px !important;
+  border-color: #e5e7eb !important;
+  width: 100% !important;
+  color: #000 !important;
+  font-size: 13px !important;
+}
+.react-tel-input .form-control:focus{
+  box-shadow: none !important;
+}
