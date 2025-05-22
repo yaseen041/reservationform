@@ -956,6 +956,7 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
+                
               </div>
 
               <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)]">Drop-Off Details</h3>
@@ -1356,7 +1357,69 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                
+                 <div className="flex-1 space-y-2">
+              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+              <div>
+                <DatePicker
+                  name={"pickupDate"}
+                  selected={
+                    new Date(convertDateFormatForSelected(formData.pickupDate))
+                  }
+                  value={convertDateFormat(formData.pickupDate)}
+                  dateFormat="yyyy-MM-dd"
+                  showYearDropdown
+                  scrollableMonthYearDropdown
+                  placeholderText="Choose a date"
+                  onChange={(val) => {
+                    handleInputChange({
+                      target: {
+                        name: "pickupDate",
+                        value: formatDateToYYYYMMDD(val),
+                      },
+                    });
+                  }}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                />
+              </div>
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+              <div className="timeContainer">
+                <Input
+                  id="pickupTime"
+                  name="pickupTime"
+                  type="time"
+                  value={formData.pickupTime}
+                  onChange={handleInputChange}
+                  required
+                  aria-required="true"
+                />
+              </div>
+              <div className="timeInput">
+                <div
+                  className="timePickerContainer"
+                  onClick={() => handleTimeClick("pickup")}
+                >
+                  <Input
+                    ref={pickupTimeRef}
+                    id="pickupTimeMobile"
+                    name="pickupTime"
+                    type="time"
+                    value={formData.pickupTime}
+                    onChange={handleInputChange}
+                    required
+                    aria-required="true"
+                    onFocus={() => handleTimeFocus("pickup")}
+                    onBlur={() => handleTimeBlur("pickup")}
+                    className="timeInput mobile-time"
+                  />
+                  {!formData.pickupTime && !isPickupTimeFocused && (
+                    <div className="placeholder">Choose time</div>
+                  )}
+                </div>
+              </div>
+            </div>
               </div>
             </>
           )}
