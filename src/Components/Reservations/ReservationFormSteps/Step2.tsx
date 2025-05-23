@@ -21,7 +21,10 @@ import {
 } from "@/Components/Common/AdditionalCharges";
 import { PlacesAutocomplete } from "@/Components/ui/places-autocomplete";
 import DatePicker from "react-datepicker";
-
+import PhoneInput from "react-phone-input-2";
+import * as Yup from 'yup';
+import { ValidationError } from 'yup';
+import { useFormik } from "formik";
 interface Step2Props {
   formData: FormData;
   handleInputChange: (
@@ -43,8 +46,8 @@ interface Step2Props {
   setPrice?: (val: string) => void;
   onDone?: () => void;
   setStep2Error: (val: boolean) => void;
-  step:number
-  steps:string[]
+  step: number
+  steps: string[]
   setCompanyDetails: React.Dispatch<React.SetStateAction<CompanyDetailsType>>
   companyDetails: CompanyDetailsType
 }
@@ -53,6 +56,152 @@ interface CompanyDetailsType {
   luggageField: boolean;
   states: string[];
 }
+
+const getStep2Schema = () =>
+  Yup.object().shape({
+    price: Yup.string().when('$customer', {
+      is: (val:string) => !!val,
+      then: (schema) => schema.required('There must be a main price'),
+      otherwise: (schema) => schema,
+    }),
+    pickupDate: Yup.string().required('Pickup date is required'),
+    pickupTime: Yup.string().required('Pickup time is required'),
+    name: Yup.string().required('Name is required'),
+    passengerNames: Yup.string().required('Passenger name is required'),
+    phone: Yup.string()
+      .required('Phone number is required')
+      .test(
+        'valid-us-phone',
+        'US phone number must be exactly 10 digits',
+        (val) => {
+          if (!val) return false;
+          const cleaned = val.trim().replace(/\D/g, '').replace(/^1/, '');
+          return cleaned.length === 10;
+        }
+      ),
+    email: Yup.string()
+      .required('Email is required')
+      .email('Please enter a valid email address'),
+
+    airlineName: Yup.string().when('$serviceType', {
+      is: (val: string) =>
+        val === 'One-Way Trip from the Airport' ||
+        val === 'One-Way Trip to the Airport' ||
+        val === 'Round Trip Involving an Airport',
+      then: (schema) => schema.required('Airline name is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    airlineArrivalTime: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'One-Way Trip from the Airport',
+      then: (schema) => schema.required('Airline arrival time is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    flightNumber: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'One-Way Trip from the Airport',
+      then: (schema) => schema.required('Flight number is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    // dropoffAirline: Yup.string().when(['$serviceType', '$roundTripFirstLeg'], {
+    //   is: (type: string, leg: string) =>
+    //     type === 'Round Trip Involving an Airport' &&
+    //     ['From Airport', 'To Airport'].includes(leg),
+    //   then: (schema) => schema.required('Drop-off airline is required'),
+    //   otherwise: (schema) => schema,
+    // }),
+    airlineDepartureTime: Yup.string().when('$serviceType', {
+      is: 'One-Way Trip to the Airport',
+      then: (schema) => schema.required('Airline departure time is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    dropOffAddress: Yup.string().when('$serviceType', {
+      is: (val: string, ctx:FormData) =>
+        val === 'One-Way Trip from the Airport' ||
+        val === 'One-Way Trip Not Involving an Airport' ||
+        (val === 'Round Trip Involving an Airport' &&
+          ctx?.roundTripFirstLeg === 'From Airport'),
+      then: (schema) => schema.required('Drop Off Address is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    pickupAddress: Yup.string().when('$serviceType', {
+      is: (val: string, ctx:FormData) =>
+        val === 'One-Way Trip to the Airport' ||
+        val === 'One-Way Trip Not Involving an Airport' ||
+        val === 'Hourly Trip' ||
+        (val === 'Round Trip Involving an Airport' &&
+          ctx?.roundTripFirstLeg === 'To Airport'),
+      then: (schema) => schema.required('Pickup Address is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    pickupCity: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'Round Trip Not Involving an Airport',
+      then: (schema) => schema.required('Pick up city is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    returnPickupAddress: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'Round Trip Not Involving an Airport',
+      then: (schema) => schema.required('Return pickup address is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    returnDropoffAddress: Yup.string().when('$serviceType', {
+      is: 'Round Trip Not Involving an Airport',
+      then: (schema) => schema.required('Return drop-off address is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    returnDate: Yup.string().when('$serviceType', {
+      is: (val: string) => val?.includes('Round Trip'),
+      then: (schema) => schema.required('Return date is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    returnTime: Yup.string().when('$serviceType', {
+      is: (val: string) => val?.includes('Round Trip'),
+      then: (schema) => schema.required('Return time is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    dropoffAirport: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'One-Way Trip to the Airport',
+      then: (schema) => schema.required('Drop-off airport is required'),
+      otherwise: (schema) => schema,
+    }),
+
+    
+    // returnPickupAirport: Yup.string().when('$serviceType', {
+    //   is: (val: string) => val === 'Round Trip Involving an Airport',
+    //   then: (schema) => schema.required('Return pickup airport is required'),
+    //   otherwise: (schema) => schema,
+    // }),
+    returnDropoffAirport: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'Round Trip Involving an Airport',
+      then: (schema) => schema.required('Return drop-off airport is required'),
+      otherwise: (schema) => schema,
+    }),
+    returnDepartureTime: Yup.string().when('$serviceType', {
+      is: (val: string) => val === 'Round Trip Involving an Airport',
+      then: (schema) => schema.required('Return departure time is required'),
+      otherwise: (schema) => schema,
+    }),
+    returnFlightNumber: Yup.string().when(['$serviceType', '$roundTripFirstLeg'], {
+      is: (type: string, leg: string) =>
+        type === 'Round Trip Involving an Airport' &&
+        ['From Airport', 'To Airport'].includes(leg),
+      then: (schema) => schema.required('Return flight number is required'),
+      otherwise: (schema) => schema,
+    }),
+
+  });
+
+
+
 
 export const Step2: React.FC<Step2Props> = ({
   formData,
@@ -66,19 +215,73 @@ export const Step2: React.FC<Step2Props> = ({
   setAdditionalPayments,
   price,
   setPrice,
-  onDone,
-  setStep2Error,
   step,
   steps,
   setCompanyDetails,
   companyDetails
 }: Step2Props) => {
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  // const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [isFocused, setIsFocused] = useState(false);
   console.log(isFocused);
+  const schema = getStep2Schema();
 
-  
+
+  const formik = useFormik({
+    initialValues: {
+      pickupDate: formData.pickupDate,
+      pickupTime: formData.pickupTime,
+      name: formData.name,
+      passengerNames: formData.passengerNames,
+      phone: formData.phone,
+      email: formData.email,
+      airlineName: formData.airlineName,
+      airlineArrivalTime: formData.airlineArrivalTime,
+      flightNumber: formData.flightNumber,
+      airlineDepartureTime: formData.airlineDepartureTime,
+      dropOffAddress: formData.dropOffAddress,
+      pickupAddress: formData.pickupAddress,
+      pickupCity: formData.pickupCity,
+      returnPickupAddress: formData.returnPickupAddress,
+      returnDropoffAddress: formData.returnDropoffAddress,
+      returnDate: formData.returnDate,
+      returnTime: formData.returnTime,
+      returnFlightNumber: formData.returnFlightNumber,
+      dropoffAirline: formData.dropoffAirline ?? "",
+      dropoffAirport: formData.dropoffAirport ?? "",
+      dropOffDepartureTime: formData.dropOffDepartureTime ?? "",
+      returnPickupAirport: formData.returnPickupAirport ?? "",
+      returnDropoffAirport: formData.returnDropoffAirport ?? "",
+      returnDepartureTime: formData.returnDepartureTime ?? "",
+
+    },
+    validationSchema: schema,
+    validate: async (values) => {
+      try {
+        await schema.validate(values, {
+          abortEarly: false,
+          context: formData, // you can use this now
+        });
+        return {};
+      } catch (err) {
+  const errors: Record<string, string> = {};
+
+  if (err instanceof ValidationError && err.inner) {
+    for (const validationError of err.inner) {
+      if (validationError.path) {
+        errors[validationError.path] = validationError.message;
+      }
+    }
+  }
+
+  return errors;
+}
+    },
+    onSubmit: () => {
+      setStep(2)
+    },
+
+  });
 
   const [minimumHoursWarning, setMinimumHoursWarning] = useState<{
     vehicle: null | Vehicle;
@@ -124,206 +327,237 @@ export const Step2: React.FC<Step2Props> = ({
     setIsFocused(false);
   };
 
-  
 
-  const validateStep2 = () => {
-    const newErrors: { [key: string]: string } = {};
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+  // const isValidEmail = (email: string): boolean => {
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return emailRegex.test(email);
+  // };
 
-    if (customer) {
-      if (!price) {
-        newErrors.price = "There must be a main price";
-      }
-      // if (additionalPayments && additionalPayments.length === 0) {
-      //   newErrors.additionalPayments =
-      //     "There must be at-least one additional charges";
-      // }
-    }
+  // const validateStep2 = () => {
+  //   const newErrors: { [key: string]: string } = {};
+  //   const currentDate = new Date();
+  //   currentDate.setHours(0, 0, 0, 0);
 
-    
-    if (!formData.pickupDate) newErrors.pickupDate = "Pickup date is required";
-    if (!formData.pickupTime) newErrors.pickupTime = "Pickup time is required";
+  //   if (customer) {
+  //     if (!price) {
+  //       newErrors.price = "There must be a main price";
+  //     }
+  //     // if (additionalPayments && additionalPayments.length === 0) {
+  //     //   newErrors.additionalPayments =
+  //     //     "There must be at-least one additional charges";
+  //     // }
+  //   }
 
-    const pickupDateTime = new Date(
-      `${formData.pickupDate}T${formData.pickupTime}`,
-    );
-    if (pickupDateTime < currentDate)
-      newErrors.pickupDate = "Pickup date and time cannot be in the past";
 
-    if (
-      formData.serviceType === "One-Way Trip from the Airport" ||
-      (formData.serviceType === "Round Trip Involving an Airport" &&
-        formData.roundTripFirstLeg === "From Airport")
-    ) {
-      if (!formData.airlineName)
-        newErrors.airlineName = "Airline name is required";
-      if (!formData.airlineArrivalTime)
-        newErrors.airlineArrivalTime = "Airline arrival time is required";
-      if (
-        formData.airlineArrivalTime &&
-        formData.pickupTime &&
-        formData.airlineArrivalTime > formData.pickupTime
-      ) {
-        newErrors.pickupTime =
-          "Pickup time cannot be earlier than airline arrival time";
-      }
-    }
+  //   if (!formData.pickupDate) newErrors.pickupDate = "Pickup date is required";
+  //   if (!formData.pickupTime) newErrors.pickupTime = "Pickup time is required";
+  //   if (!formData.name) newErrors.name = "Name is required";
+  //   if (!formData.passengerNames) newErrors.passengerName = "Passenger name is required";
+  //   const pickupDateTime = new Date(
+  //     `${formData.pickupDate}T${formData.pickupTime}`,
+  //   );
+  //   if (pickupDateTime < currentDate)
+  //     newErrors.pickupDate = "Pickup date and time cannot be in the past";
+  //   if (!formData.phone) {
+  //     newErrors.phone = "Phone number is required";
+  //   } else {
+  //     const phone = formData.phone.trim();
+  //     if (phone.startsWith("1")) {
+  //       const cleanedPhone = phone.replace(/\D/g, "").replace(/^1/, "");
+  //       if (cleanedPhone.length !== 10) {
+  //         newErrors.phone = "US phone number must be exactly 10 digits";
+  //       }
+  //     }
+  //   }
+  //   if (!formData.email) {
+  //     newErrors.email = "Email is required";
+  //   } else if (!isValidEmail(formData.email)) {
+  //     newErrors.email = "Please enter a valid email address";
+  //   }
+  //   if (
+  //     formData.serviceType === "One-Way Trip from the Airport" ||
+  //     (formData.serviceType === "Round Trip Involving an Airport" &&
+  //       formData.roundTripFirstLeg === "From Airport")
+  //   ) {
+  //     if (!formData.airlineName)
+  //       newErrors.airlineName = "Airline name is required";
+  //     if (!formData.airlineArrivalTime)
+  //       newErrors.airlineArrivalTime = "Airline arrival time is required";
+  //     if (
+  //       formData.airlineArrivalTime &&
+  //       formData.pickupTime &&
+  //       formData.airlineArrivalTime > formData.pickupTime
+  //     ) {
+  //       newErrors.pickupTime =
+  //         "Pickup time cannot be earlier than airline arrival time";
+  //     }
+  //   }
 
-    if (formData.serviceType === "One-Way Trip from the Airport") {
-      if (!formData.flightNumber) {
-        newErrors.airlineName = "Flight number is required";
-      }
-    }
+  //   if (formData.serviceType === "One-Way Trip from the Airport") {
+  //     if (!formData.flightNumber) {
+  //       newErrors.airlineName = "Flight number is required";
+  //     }
+  //   }
 
-    if (formData.serviceType === "One-Way Trip to the Airport") {
-      if (!formData.airlineName)
-        newErrors.airlineName = "Airline name is required";
-      if (!formData.airlineDepartureTime)
-        newErrors.airlineDepartureTime = "Airline departure time is required";
-      if (
-        formData.airlineDepartureTime &&
-        formData.pickupTime &&
-        formData.airlineDepartureTime < formData.pickupTime
-      ) {
-        newErrors.pickupTime =
-          "Pickup time cannot be later than airline departure time";
-      }
-    }
+  //   if (formData.serviceType === "One-Way Trip to the Airport") {
+  //     if (!formData.airlineName)
+  //       newErrors.airlineName = "Airline name is required";
+  //     if (!formData.airlineDepartureTime)
+  //       newErrors.airlineDepartureTime = "Airline departure time is required";
+  //     if (
+  //       formData.airlineDepartureTime &&
+  //       formData.pickupTime &&
+  //       formData.airlineDepartureTime < formData.pickupTime
+  //     ) {
+  //       newErrors.pickupTime =
+  //         "Pickup time cannot be later than airline departure time";
+  //     }
+  //   }
 
-    if (
-      formData.serviceType === "Round Trip Involving an Airport" &&
-      formData.roundTripFirstLeg === "To Airport"
-    ) {
-      if (!formData.dropoffAirline)
-        newErrors.airlineName = "Airline name is required";
-      if (!formData.returnTime)
-        newErrors.airlineDepartureTime = "Airline departure time is required";
-      if (
-        formData.airlineDepartureTime &&
-        formData.pickupTime &&
-        formData.airlineDepartureTime < formData.pickupTime
-      ) {
-        newErrors.pickupTime =
-          "Pickup time cannot be later than airline departure time";
-      }
-    }
+  //   if (
+  //     formData.serviceType === "Round Trip Involving an Airport" &&
+  //     formData.roundTripFirstLeg === "To Airport"
+  //   ) {
+  //     if (!formData.dropoffAirline)
+  //       newErrors.airlineName = "Airline name is required";
+  //     if (!formData.returnTime)
+  //       newErrors.airlineDepartureTime = "Airline departure time is required";
+  //     if (
+  //       formData.airlineDepartureTime &&
+  //       formData.pickupTime &&
+  //       formData.airlineDepartureTime < formData.pickupTime
+  //     ) {
+  //       newErrors.pickupTime =
+  //         "Pickup time cannot be later than airline departure time";
+  //     }
+  //   }
 
-    if (
-      formData.serviceType === "Round Trip Involving an Airport" &&
-      formData.roundTripFirstLeg === "To Airport"
-    ) {
-      if (!formData.returnFlightNumber)
-        newErrors.airlineDepartureTime = "Return flight number is required";
-    }
+  //   if (
+  //     formData.serviceType === "Round Trip Involving an Airport" &&
+  //     formData.roundTripFirstLeg === "To Airport"
+  //   ) {
+  //     if (!formData.returnFlightNumber)
+  //       newErrors.airlineDepartureTime = "Return flight number is required";
+  //   }
 
-    if (
-      formData.serviceType === "Round Trip Involving an Airport" &&
-      formData.roundTripFirstLeg === "From Airport"
-    ) {
-      if (!formData.flightNumber)
-        newErrors.airlineName = "Arrival flight number is required";
-      if (!formData.returnFlightNumber)
-        newErrors.airlineDepartureTime = "Return flight number is required";
-    }
-    if (formData.serviceType === "Round Trip Not Involving an Airport") {
-      if (!formData?.pickupAddress) {
-        newErrors.pickupAddress = "Pick up address is required";
-      }
-      if (!formData?.pickupCity) {
-        newErrors.pickupCity = "Pick up city is required";
-      }
-      if (!formData?.returnPickupAddress) {
-        newErrors.returnPickupAddress = "Return pick up address is required";
-      }
-      if (!formData?.returnDropoffAddress) {
-        newErrors.returnDropoffAddress = "Return drop off address is required";
-      }
-    }
+  //   if (
+  //     formData.serviceType === "Round Trip Involving an Airport" &&
+  //     formData.roundTripFirstLeg === "From Airport"
+  //   ) {
+  //     if (!formData.flightNumber)
+  //       newErrors.airlineName = "Arrival flight number is required";
+  //     if (!formData.returnFlightNumber)
+  //       newErrors.airlineDepartureTime = "Return flight number is required";
+  //   }
+  //   if (formData.serviceType === "Round Trip Not Involving an Airport") {
+  //     if (!formData?.pickupAddress) {
+  //       newErrors.pickupAddress = "Pick up address is required";
+  //     }
+  //     if (!formData?.pickupCity) {
+  //       newErrors.pickupCity = "Pick up city is required";
+  //     }
+  //     if (!formData?.returnPickupAddress) {
+  //       newErrors.returnPickupAddress = "Return pick up address is required";
+  //     }
+  //     if (!formData?.returnDropoffAddress) {
+  //       newErrors.returnDropoffAddress = "Return drop off address is required";
+  //     }
+  //   }
 
-    if (formData.serviceType.includes("Round Trip")) {
-      if (!formData.returnDate)
-        newErrors.returnDate = "Return date is required";
-      if (!formData.returnTime)
-        newErrors.returnTime = "Return time is required";
+  //   if (formData.serviceType.includes("Round Trip")) {
+  //     if (!formData.returnDate)
+  //       newErrors.returnDate = "Return date is required";
+  //     if (!formData.returnTime)
+  //       newErrors.returnTime = "Return time is required";
 
-      const returnDateTime = new Date(
-        `${formData.returnDate}T${formData.returnTime}`,
-      );
-      if (returnDateTime < pickupDateTime)
-        newErrors.returnDate =
-          "Return date and time cannot be earlier than pickup date and time";
-    }
+  //     const returnDateTime = new Date(
+  //       `${formData.returnDate}T${formData.returnTime}`,
+  //     );
+  //     if (returnDateTime < pickupDateTime)
+  //       newErrors.returnDate =
+  //         "Return date and time cannot be earlier than pickup date and time";
+  //   }
 
-  
 
-    if (formData.serviceType === "One-Way Trip from the Airport") {
-      if (!formData.dropOffAddress) {
-        newErrors.dropOffAddress = "Drop Off Address is required"
-      }
-    }
 
-    if (formData.serviceType === "One-Way Trip to the Airport") {
-      if (!formData.pickupAddress) {
-        newErrors.pickupAddress = "Pickup Address is required"
-      }
-    }
+  //   if (formData.serviceType === "One-Way Trip from the Airport") {
+  //     if (!formData.dropOffAddress) {
+  //       newErrors.dropOffAddress = "Drop Off Address is required"
+  //     }
+  //   }
 
-    if (formData.serviceType === "One-Way Trip Not Involving an Airport") {
-      if (!formData.dropOffAddress) {
-        newErrors.dropOffAddress = "Drop Off Address is required"
-      }
-      if (!formData.pickupAddress) {
-        newErrors.pickupAddress = "Pickup Address is required"
-      }
-    }
+  //   if (formData.serviceType === "One-Way Trip to the Airport") {
+  //     if (!formData.pickupAddress) {
+  //       newErrors.pickupAddress = "Pickup Address is required"
+  //     }
+  //   }
 
-    if (formData.serviceType === "Round Trip Involving an Airport") {
-      if (formData.roundTripFirstLeg === "From Airport") {
-        if (!formData.dropOffAddress) {
-          newErrors.dropOffAddress = "Drop Off Address is required"
-        }
-      }
+  //   if (formData.serviceType === "One-Way Trip Not Involving an Airport") {
+  //     if (!formData.dropOffAddress) {
+  //       newErrors.dropOffAddress = "Drop Off Address is required"
+  //     }
+  //     if (!formData.pickupAddress) {
+  //       newErrors.pickupAddress = "Pickup Address is required"
+  //     }
+  //   }
 
-      if (formData.roundTripFirstLeg === "To Airport") {
-        if (!formData.pickupAddress) {
-          newErrors.pickupAddress = "Pickup Address is required"
-        }
-      }
-    }
+  //   if (formData.serviceType === "Round Trip Involving an Airport") {
+  //     if (formData.roundTripFirstLeg === "From Airport") {
+  //       if (!formData.dropOffAddress) {
+  //         newErrors.dropOffAddress = "Drop Off Address is required"
+  //       }
+  //     }
 
-    if (formData.serviceType === "Round Trip Not Involving an Airport") {
-      if(!formData.returnPickupAddress){
-        newErrors.returnPickupAddress = "Return pickup address is required"
-      }
-      if(!formData.returnDropoffAddress){
-        newErrors.returnDropoffAddress = "Return drop-off address is required"
-      }
-    }
+  //     if (formData.roundTripFirstLeg === "To Airport") {
+  //       if (!formData.pickupAddress) {
+  //         newErrors.pickupAddress = "Pickup Address is required"
+  //       }
+  //     }
+  //   }
 
-    if (formData.serviceType === "Hourly Trip") {
-      if (!formData.pickupAddress) {
-        newErrors.pickupAddress = "Pickup Address is required"
-      }
-    }
+  //   if (formData.serviceType === "Round Trip Not Involving an Airport") {
+  //     if (!formData.returnPickupAddress) {
+  //       newErrors.returnPickupAddress = "Return pickup address is required"
+  //     }
+  //     if (!formData.returnDropoffAddress) {
+  //       newErrors.returnDropoffAddress = "Return drop-off address is required"
+  //     }
+  //   }
 
-   
-   
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  //   if (formData.serviceType === "Hourly Trip") {
+  //     if (!formData.pickupAddress) {
+  //       newErrors.pickupAddress = "Pickup Address is required"
+  //     }
+  //   }
 
-  const handleNext = () => {
-    if (validateStep2()) {
-      setStep2Error(false);
-      if (onDone) {
-        onDone();
-      }
-      setStep(2);
-    } else {
-      setStep2Error(true);
-    }
-  };
+
+
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+
+  // const isFutureDateTime = (date: string, time: string) => {
+  //   if (!date || !time) return true;
+  //   const dt = new Date(`${date}T${time}`);
+  //   const now = new Date();
+  //   now.setHours(0, 0, 0, 0);
+  //   return dt >= now;
+  // };
+
+
+
+
+  // const handleNext = () => {
+  //   if (validateStep2()) {
+  //     setStep2Error(false);
+  //     if (onDone) {
+  //       onDone();
+  //     }
+  //     setStep(2);
+  //   } else {
+  //     setStep2Error(true);
+  //   }
+  // };
 
   const formatDateToYYYYMMDD = (date: Date | null) => {
     return date ? date.toISOString().split("T")[0] : ""; // Converts to "yyyy-mm-dd"
@@ -387,13 +621,13 @@ export const Step2: React.FC<Step2Props> = ({
     return "Return Trip Details";
   };
 
-  const [isPickupTimeFocused, setIsPickupTimeFocused] = useState(false);
+  // const [isPickupTimeFocused, setIsPickupTimeFocused] = useState(false);
   const [isReturnTimeFocused, setIsReturnTimeFocused] = useState(false);
   const [isDepartureTimeFocused, setIsDepartureTimeFocused] = useState(false);
-  const [isAirlineArrivalTimeFocused, setIsAirlineArrivalTimeFocused] =
-    useState(false);
-  const [isAirlineDepartureTimeFocused, setIsAirlineDepartureTimeFocused] =
-    useState(false);
+  // const [isAirlineArrivalTimeFocused, setIsAirlineArrivalTimeFocused] =
+  //   useState(false);
+  // const [isAirlineDepartureTimeFocused, setIsAirlineDepartureTimeFocused] =
+  //   useState(false);
   const [isDropOffDepartureTimeFocused, setIsDropOffDepartureTimeFocused] =
     useState(false);
   const pickupTimeRef = useRef<HTMLInputElement>(null);
@@ -443,15 +677,15 @@ export const Step2: React.FC<Step2Props> = ({
       | "dropOffDeparture",
   ) => {
     if (timeType === "pickup") {
-      setIsPickupTimeFocused(true);
+      // setIsPickupTimeFocused(true);
     } else if (timeType === "return") {
       setIsReturnTimeFocused(true);
     } else if (timeType === "departure") {
       setIsDepartureTimeFocused(true);
     } else if (timeType === "airlineArrival") {
-      setIsAirlineArrivalTimeFocused(true);
+      // setIsAirlineArrivalTimeFocused(true);
     } else if (timeType === "airlineDeparture") {
-      setIsAirlineDepartureTimeFocused(true);
+      // setIsAirlineDepartureTimeFocused(true);
     } else if (timeType === "dropOffDeparture") {
       setIsDropOffDepartureTimeFocused(true);
     }
@@ -467,15 +701,15 @@ export const Step2: React.FC<Step2Props> = ({
       | "dropOffDeparture",
   ) => {
     if (timeType === "pickup") {
-      setIsPickupTimeFocused(false);
+      // setIsPickupTimeFocused(false);
     } else if (timeType === "return") {
       setIsReturnTimeFocused(false);
     } else if (timeType === "departure") {
       setIsDepartureTimeFocused(false);
     } else if (timeType === "airlineArrival") {
-      setIsAirlineArrivalTimeFocused(false);
+      // setIsAirlineArrivalTimeFocused(false);
     } else if (timeType === "airlineDeparture") {
-      setIsAirlineDepartureTimeFocused(false);
+      // setIsAirlineDepartureTimeFocused(false);
     } else if (timeType === "dropOffDeparture") {
       setIsDropOffDepartureTimeFocused(false);
     }
@@ -541,10 +775,12 @@ export const Step2: React.FC<Step2Props> = ({
     return `${month}/${day}/${year}`;
   }
 
-  
+  console.log(formik.errors)
+
   return (
     <>
       <div className="space-y-6" aria-label="Reservation Form Step 2">
+
         {/* <p className="text-md font-medium text-gray-700" aria-live="polite">
           {renderSummary()}
         </p> */}
@@ -655,96 +891,116 @@ export const Step2: React.FC<Step2Props> = ({
         {/* Trip Details */}
         <div className="space-y-4" aria-label="Trip Details">
           {/* <h3 className="text-md font-semibold">{renderTripDetailsHeader()}</h3> */}
-        
+
           {formData.serviceType === "One-Way Trip from the Airport" ? (
             <>
               <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)] ">Pickup Details</h3>
-                <div className="flex-css flex gap-0.5">
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
-              <div>
-                <DatePicker
-                  name={"pickupDate"}
-                  selected={
-                    new Date(convertDateFormatForSelected(formData.pickupDate))
-                  }
-                  value={convertDateFormat(formData.pickupDate)}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Choose a date"
-                  onChange={(val) => {
-                    handleInputChange({
-                      target: {
-                        name: "pickupDate",
-                        value: formatDateToYYYYMMDD(val),
-                      },
-                    });
-                  }}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
-              <div className="timeContainer">
-                <Input
-                  id="pickupTime"
-                  name="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={handleInputChange}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div className="timeInput">
-                <div
-                  className="timePickerContainer"
-                  onClick={() => handleTimeClick("pickup")}
-                >
-                  <Input
-                    ref={pickupTimeRef}
-                    id="pickupTimeMobile"
-                    name="pickupTime"
-                    type="time"
-                    value={formData.pickupTime}
-                    onChange={handleInputChange}
-                    required
-                    aria-required="true"
-                    onFocus={() => handleTimeFocus("pickup")}
-                    onBlur={() => handleTimeBlur("pickup")}
-                    className="timeInput mobile-time"
-                  />
-                  {!formData.pickupTime && !isPickupTimeFocused && (
-                    <div className="placeholder">Choose time</div>
+              <div className="flex-css flex gap-0.5">
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                  <div>
+                    <DatePicker
+                      name={"pickupDate"}
+                      selected={
+                        formik.values.pickupDate
+                          ? new Date(convertDateFormatForSelected(formik.values.pickupDate))
+                          : null
+                      }
+                      value={convertDateFormat(formData.pickupDate)}
+                      dateFormat="yyyy-MM-dd"
+                      showYearDropdown
+                      scrollableMonthYearDropdown
+                      placeholderText="Choose a date"
+                      onChange={(val) => {
+                        const formattedDate = formatDateToYYYYMMDD(val);
+
+                        // Update Formik and your custom state
+                        formik.setFieldValue("pickupDate", formattedDate);
+                        handleInputChange({
+                          target: {
+                            name: "pickupDate",
+                            value: formattedDate,
+                          },
+                        });
+                      }}
+                      onBlur={formik.handleBlur}
+                      onFocus={handleFocus}
+                    />
+                  </div>
+                  {formik.touched.pickupDate && formik.errors.pickupDate && (
+                    <div className="text-sm text-red-500">{formik.errors.pickupDate}</div>
                   )}
                 </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                  <div className="timeContainer">
+                    <Input
+                      id="pickupTime"
+                      name="pickupTime"
+                      type="time"
+                      value={formik.values.pickupTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+                      required
+                      aria-required="true"
+                    />
+                    {formik.touched.pickupTime && formik.errors.pickupTime && (
+                      <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                    )}
+                  </div>
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("pickup")}
+                    >
+                      <Input
+                        ref={pickupTimeRef}
+                        id="pickupTimeMobile"
+                        name="pickupTime"
+                        type="time"
+                        value={formik.values.pickupTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("pickup")}
+                        onBlur={() => handleTimeBlur("pickup")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.pickupTime && formik.errors.pickupTime && (
+                        <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineName">Airline Name</Label>
                 <Input
                   id="airlineName"
                   name="airlineName"
-                  value={formData.airlineName}
-                  onChange={handleInputChange}
+                  value={formik.values.airlineName}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineName", e.target.value) }}
+
                   required
                   aria-required="true"
                 />
+                {formik.touched.airlineName && formik.errors.airlineName && (
+                  <div className="text-sm text-red-500">{formik.errors.airlineName}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineName">Flight Number</Label>
                 <Input
                   id="flightNumber"
                   name="flightNumber"
-                  value={formData.flightNumber}
-                  onChange={handleInputChange}
+                  value={formik.values.flightNumber}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("flightNumber", e.target.value) }}
+
                   required
                   aria-required="true"
                 />
+                {formik.touched.flightNumber && formik.errors.flightNumber && (
+                  <div className="text-sm text-red-500">{formik.errors.flightNumber}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineArrivalTime">Airline Arrival Time</Label>
@@ -753,11 +1009,14 @@ export const Step2: React.FC<Step2Props> = ({
                     id="airlineArrivalTime"
                     name="airlineArrivalTime"
                     type="time"
-                    value={formData.airlineArrivalTime}
-                    onChange={handleInputChange}
+                    value={formik.values.airlineArrivalTime}
+                    onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineArrivalTime", e.target.value) }}
                     required
                     aria-required="true"
                   />
+                  {formik.touched.airlineArrivalTime && formik.errors.airlineArrivalTime && (
+                    <div className="text-sm text-red-500">{formik.errors.airlineArrivalTime}</div>
+                  )}
                 </div>
                 <div className="timeInput">
                   <div
@@ -769,18 +1028,18 @@ export const Step2: React.FC<Step2Props> = ({
                       id="airlineArrivalTimeMobile"
                       name="airlineArrivalTime"
                       type="time"
-                      value={formData.airlineArrivalTime}
-                      onChange={handleInputChange}
+                      value={formik.values.airlineArrivalTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineArrivalTime", e.target.value) }}
+
                       required
                       aria-required="true"
                       onFocus={() => handleTimeFocus("airlineArrival")}
                       onBlur={() => handleTimeBlur("airlineArrival")}
                       className="timeInput mobile-time"
                     />
-                    {!formData.airlineArrivalTime &&
-                      !isAirlineArrivalTimeFocused && (
-                        <div className="placeholder">Choose time</div>
-                      )}
+                    {formik.touched.airlineArrivalTime && formik.errors.airlineArrivalTime && (
+                      <div className="text-sm text-red-500">{formik.errors.airlineArrivalTime}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -789,20 +1048,32 @@ export const Step2: React.FC<Step2Props> = ({
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Drop-Off Address</Label>
                 <PlacesAutocomplete
-                  value={formData.dropOffAddress}
+                  value={formik.values.dropOffAddress}
                   states={companyDetails.states}
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('dropOffAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "dropOffAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'dropOffAddress',
+                        value,
                       },
                     });
+
+                    // If you need additional logic
                     changeDropOffAddress(place);
                   }}
                 />
+                {formik.touched.dropOffAddress && formik.errors.dropOffAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.dropOffAddress}</div>
+                )}
               </div>
               <div className="grid-css grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -841,88 +1112,36 @@ export const Step2: React.FC<Step2Props> = ({
           ) : formData.serviceType === "One-Way Trip to the Airport" ? (
             <>
               <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)]">Pickup Details</h3>
-                <div className="flex-css flex gap-0.5">
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
-              <div>
-                <DatePicker
-                  name={"pickupDate"}
-                  selected={
-                    new Date(convertDateFormatForSelected(formData.pickupDate))
-                  }
-                  value={convertDateFormat(formData.pickupDate)}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Choose a date"
-                  onChange={(val) => {
-                    handleInputChange({
-                      target: {
-                        name: "pickupDate",
-                        value: formatDateToYYYYMMDD(val),
-                      },
-                    });
-                  }}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
-              <div className="timeContainer">
-                <Input
-                  id="pickupTime"
-                  name="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={handleInputChange}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div className="timeInput">
-                <div
-                  className="timePickerContainer"
-                  onClick={() => handleTimeClick("pickup")}
-                >
-                  <Input
-                    ref={pickupTimeRef}
-                    id="pickupTimeMobile"
-                    name="pickupTime"
-                    type="time"
-                    value={formData.pickupTime}
-                    onChange={handleInputChange}
-                    required
-                    aria-required="true"
-                    onFocus={() => handleTimeFocus("pickup")}
-                    onBlur={() => handleTimeBlur("pickup")}
-                    className="timeInput mobile-time"
-                  />
-                  {!formData.pickupTime && !isPickupTimeFocused && (
-                    <div className="placeholder">Choose time</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Pickup Address</Label>
                 <PlacesAutocomplete
-                  value={formData.pickupAddress}
+                  value={formik.values.pickupAddress}
                   states={companyDetails.states}
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('pickupAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "pickupAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'pickupAddress',
+                        value,
                       },
                     });
-                    changePickUpAddress(place);
+
+                    // If you need additional logic
+                    changeDropOffAddress(place);
                   }}
                 />
+                {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.pickupAddress}</div>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -956,59 +1175,153 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
               </div>
+              <div className="flex-css flex gap-4">
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                  <div>
+                    <DatePicker
+                      name={"pickupDate"}
+                      selected={
+                        formik.values.pickupDate
+                          ? new Date(convertDateFormatForSelected(formik.values.pickupDate))
+                          : null
+                      }
+                      value={convertDateFormat(formData.pickupDate)}
+                      dateFormat="yyyy-MM-dd"
+                      showYearDropdown
+                      scrollableMonthYearDropdown
+                      placeholderText="Choose a date"
+                      onChange={(val) => {
+                        const formattedDate = formatDateToYYYYMMDD(val);
 
+                        // Update Formik and your custom state
+                        formik.setFieldValue("pickupDate", formattedDate);
+                        handleInputChange({
+                          target: {
+                            name: "pickupDate",
+                            value: formattedDate,
+                          },
+                        });
+                      }}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                    />
+                  </div>
+                  {formik.touched.pickupDate && formik.errors.pickupDate && (
+                    <div className="text-sm text-red-500">{formik.errors.pickupDate}</div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                  <div className="timeContainer">
+                    <Input
+                      id="pickupTime"
+                      name="pickupTime"
+                      type="time"
+                      value={formik.values.pickupTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+
+                      required
+                      aria-required="true"
+                    />
+                  </div>
+                  {formik.touched.pickupTime && formik.errors.pickupTime && (
+                    <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                  )}
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("pickup")}
+                    >
+                      <Input
+                        ref={pickupTimeRef}
+                        id="pickupTimeMobile"
+                        name="pickupTime"
+                        type="time"
+                        value={formik.values.pickupTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("pickup")}
+                        onBlur={() => handleTimeBlur("pickup")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.pickupTime && formik.errors.pickupTime && (
+                        <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)]">Drop-Off Details</h3>
-
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineName">Airline Name</Label>
                 <Input
                   id="airlineName"
                   name="airlineName"
-                  value={formData.airlineName}
-                  onChange={handleInputChange}
+                  value={formik.values.airlineName}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineName", e.target.value) }}
                   required
                   aria-required="true"
                 />
+                {formik.touched.airlineName && formik.errors.airlineName && (
+                  <div className="text-sm text-red-500">{formik.errors.airlineName}</div>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label className="font-semibold" htmlFor="airlineDepartureTime">
-                  Airline Departure Time
-                </Label>
-                <div className="timeContainer">
-                  <Input
-                    id="airlineDepartureTime"
-                    name="airlineDepartureTime"
-                    type="time"
-                    value={formData.airlineDepartureTime}
-                    onChange={handleInputChange}
-                    required
-                    aria-required="true"
-                  />
-                </div>
-                <div className="timeInput">
-                  <div
-                    className="timePickerContainer"
-                    onClick={() => handleTimeClick("airlineDeparture")}
-                  >
+              <div className="grid grid-cols-2 gap-4 " >
+                 <div className="space-y-2">
+                <Label className="font-semibold" htmlFor="extraStops">Extra Stops</Label>
+                <Input
+                  id="extraStops"
+                  name="extraStops"
+                  value={formData.extraStops}
+                  onChange={handleInputChange}
+                />
+              </div>
+                <div className="space-y-2">
+                  <Label className="font-semibold" htmlFor="airlineDepartureTime">
+                    Airline Departure Time
+                  </Label>
+                  <div className="timeContainer">
                     <Input
-                      ref={airlineDepartureTimeRef}
-                      id="airlineDepartureTimeMobile"
+                      id="airlineDepartureTime"
                       name="airlineDepartureTime"
                       type="time"
-                      value={formData.airlineDepartureTime}
-                      onChange={handleInputChange}
+                      value={formik.values.airlineDepartureTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineDepartureTime", e.target.value) }}
+
                       required
                       aria-required="true"
-                      onFocus={() => handleTimeFocus("airlineDeparture")}
-                      onBlur={() => handleTimeBlur("airlineDeparture")}
-                      className="timeInput mobile-time"
                     />
-                    {!formData.airlineDepartureTime &&
-                      !isAirlineDepartureTimeFocused && (
-                        <div className="placeholder">Choose time</div>
+                  </div>
+                  {formik.touched.airlineDepartureTime && formik.errors.airlineDepartureTime && (
+                    <div className="text-sm text-red-500">{formik.errors.airlineDepartureTime}</div>
+                  )}
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("airlineDeparture")}
+                    >
+                      <Input
+                        ref={airlineDepartureTimeRef}
+                        id="airlineDepartureTimeMobile"
+                        name="airlineDepartureTime"
+                        type="time"
+                        value={formik.values.airlineDepartureTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineDepartureTime", e.target.value) }}
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("airlineDeparture")}
+                        onBlur={() => handleTimeBlur("airlineDeparture")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.airlineDepartureTime && formik.errors.airlineDepartureTime && (
+                        <div className="text-sm text-red-500">{formik.errors.airlineDepartureTime}</div>
                       )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1021,22 +1334,30 @@ export const Step2: React.FC<Step2Props> = ({
                 <Input
                   id="airlineName"
                   name="airlineName"
-                  value={formData.airlineName}
-                  onChange={handleInputChange}
+                  value={formik.values.airlineName}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineName", e.target.value) }}
+
                   required
                   aria-required="true"
                 />
+                {formik.touched.airlineName && formik.errors.airlineName && (
+                  <div className="text-sm text-red-500">{formik.errors.airlineName}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineName">Flight Number</Label>
                 <Input
                   id="flightNumber"
                   name="flightNumber"
-                  value={formData.flightNumber}
-                  onChange={handleInputChange}
+                  value={formik.values.flightNumber}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("flightNumber", e.target.value) }}
+
                   required
                   aria-required="true"
                 />
+                {formik.touched.flightNumber && formik.errors.flightNumber && (
+                  <div className="text-sm text-red-500">{formik.errors.flightNumber}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="airlineArrivalTime">Airline Arrival Time</Label>
@@ -1045,11 +1366,14 @@ export const Step2: React.FC<Step2Props> = ({
                     id="airlineArrivalTime"
                     name="airlineArrivalTime"
                     type="time"
-                    value={formData.airlineArrivalTime}
-                    onChange={handleInputChange}
+                    value={formik.values.airlineArrivalTime}
+                    onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineArrivalTime", e.target.value) }}
                     required
                     aria-required="true"
                   />
+                  {formik.touched.airlineArrivalTime && formik.errors.airlineArrivalTime && (
+                    <div className="text-sm text-red-500">{formik.errors.airlineArrivalTime}</div>
+                  )}
                 </div>
                 <div className="timeInput">
                   <div
@@ -1061,18 +1385,18 @@ export const Step2: React.FC<Step2Props> = ({
                       id="airlineArrivalTimeMobile"
                       name="airlineArrivalTime"
                       type="time"
-                      value={formData.airlineArrivalTime}
-                      onChange={handleInputChange}
+                      value={formik.values.airlineArrivalTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineArrivalTime", e.target.value) }}
+
                       required
                       aria-required="true"
                       onFocus={() => handleTimeFocus("airlineArrival")}
                       onBlur={() => handleTimeBlur("airlineArrival")}
                       className="timeInput mobile-time"
                     />
-                    {!formData.airlineArrivalTime &&
-                      !isAirlineArrivalTimeFocused && (
-                        <div className="placeholder">Choose time</div>
-                      )}
+                    {formik.touched.airlineArrivalTime && formik.errors.airlineArrivalTime && (
+                      <div className="text-sm text-red-500">{formik.errors.airlineArrivalTime}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1083,20 +1407,34 @@ export const Step2: React.FC<Step2Props> = ({
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Pickup Address</Label>
                 <PlacesAutocomplete
-                  value={formData.pickupAddress}
+                  value={formik.values.pickupAddress}
                   states={companyDetails.states}
+
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('pickupAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "pickupAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'pickupAddress',
+                        value,
                       },
                     });
+
+                    // If you need additional logic
                     changePickUpAddress(place);
                   }}
                 />
+
+                {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.pickupAddress}</div>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -1130,6 +1468,85 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                  <div>
+                    <DatePicker
+                      name={"pickupDate"}
+                      selected={
+                        formik.values.pickupDate
+                          ? new Date(convertDateFormatForSelected(formik.values.pickupDate))
+                          : null
+                      }
+                      value={convertDateFormat(formData.pickupDate)}
+                      dateFormat="yyyy-MM-dd"
+                      showYearDropdown
+                      scrollableMonthYearDropdown
+                      placeholderText="Choose a date"
+                      onChange={(val) => {
+                        const formattedDate = formatDateToYYYYMMDD(val);
+
+                        // Update Formik and your custom state
+                        formik.setFieldValue("pickupDate", formattedDate);
+                        handleInputChange({
+                          target: {
+                            name: "pickupDate",
+                            value: formattedDate,
+                          },
+                        });
+                      }}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                    />
+                  </div>
+                  {formik.touched.pickupDate && formik.errors.pickupDate && (
+                    <div className="text-sm text-red-500">{formik.errors.pickupDate}</div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                  <div className="timeContainer">
+                    <Input
+                      id="pickupTime"
+                      name="pickupTime"
+                      type="time"
+                      value={formik.values.pickupTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+
+                      required
+                      aria-required="true"
+                    />
+                    {formik.touched.pickupTime && formik.errors.pickupTime && (
+                      <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                    )}
+                  </div>
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("pickup")}
+                    >
+                      <Input
+                        ref={pickupTimeRef}
+                        id="pickupTimeMobile"
+                        name="pickupTime"
+                        type="time"
+                        value={formik.values.pickupTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("pickup")}
+                        onBlur={() => handleTimeBlur("pickup")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.pickupTime && formik.errors.pickupTime && (
+                        <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </>
           ) : formData.serviceType ===
@@ -1139,20 +1556,33 @@ export const Step2: React.FC<Step2Props> = ({
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Pickup Address</Label>
                 <PlacesAutocomplete
-                  value={formData.pickupAddress}
+                  value={formik.values.pickupAddress}
                   states={companyDetails.states}
+
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('pickupAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "pickupAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'pickupAddress',
+                        value,
                       },
                     });
+
+                    // If you need additional logic
                     changePickUpAddress(place);
                   }}
                 />
+                {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.pickupAddress}</div>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -1186,89 +1616,115 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                 <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
-              <div>
-                <DatePicker
-                  name={"pickupDate"}
-                  selected={
-                    new Date(convertDateFormatForSelected(formData.pickupDate))
-                  }
-                  value={convertDateFormat(formData.pickupDate)}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Choose a date"
-                  onChange={(val) => {
-                    handleInputChange({
-                      target: {
-                        name: "pickupDate",
-                        value: formatDateToYYYYMMDD(val),
-                      },
-                    });
-                  }}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
-              <div className="timeContainer">
-                <Input
-                  id="pickupTime"
-                  name="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={handleInputChange}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div className="timeInput">
-                <div
-                  className="timePickerContainer"
-                  onClick={() => handleTimeClick("pickup")}
-                >
-                  <Input
-                    ref={pickupTimeRef}
-                    id="pickupTimeMobile"
-                    name="pickupTime"
-                    type="time"
-                    value={formData.pickupTime}
-                    onChange={handleInputChange}
-                    required
-                    aria-required="true"
-                    onFocus={() => handleTimeFocus("pickup")}
-                    onBlur={() => handleTimeBlur("pickup")}
-                    className="timeInput mobile-time"
-                  />
-                  {!formData.pickupTime && !isPickupTimeFocused && (
-                    <div className="placeholder">Choose time</div>
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                  <div>
+                    <DatePicker
+                      name={"pickupDate"}
+                      selected={
+                        formik.values.pickupDate
+                          ? new Date(convertDateFormatForSelected(formik.values.pickupDate))
+                          : null
+                      }
+                      value={convertDateFormat(formData.pickupDate)}
+                      dateFormat="yyyy-MM-dd"
+                      showYearDropdown
+                      scrollableMonthYearDropdown
+                      placeholderText="Choose a date"
+                      onChange={(val) => {
+                        const formattedDate = formatDateToYYYYMMDD(val);
+
+                        // Update Formik and your custom state
+                        formik.setFieldValue("pickupDate", formattedDate);
+                        handleInputChange({
+                          target: {
+                            name: "pickupDate",
+                            value: formattedDate,
+                          },
+                        });
+                      }}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                    />
+                  </div>
+                  {formik.touched.pickupDate && formik.errors.pickupDate && (
+                    <div className="text-sm text-red-500">{formik.errors.pickupDate}</div>
                   )}
                 </div>
-              </div>
-            </div>
+                <div className="flex-1 space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                  <div className="timeContainer">
+                    <Input
+                      id="pickupTime"
+                      name="pickupTime"
+                      type="time"
+                      value={formik.values.pickupTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+                      required
+                      aria-required="true"
+                    />
+
+                    {formik.touched.pickupTime && formik.errors.pickupTime && (
+                      <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                    )}
+
+                  </div>
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("pickup")}
+                    >
+                      <Input
+                        ref={pickupTimeRef}
+                        id="pickupTimeMobile"
+                        name="pickupTime"
+                        type="time"
+                        value={formik.values.pickupTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("pickup")}
+                        onBlur={() => handleTimeBlur("pickup")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.pickupTime && formik.errors.pickupTime && (
+                        <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <h3 className="text-lg font-semibold">Drop-Off Details</h3>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Drop-Off Address</Label>
                 <PlacesAutocomplete
-                  value={formData.dropOffAddress}
+                  value={formik.values.dropOffAddress}
                   states={companyDetails.states}
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('dropOffAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "dropOffAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'dropOffAddress',
+                        value,
                       },
                     });
+
+                    // If you need additional logic
                     changeDropOffAddress(place);
                   }}
                 />
+                {formik.touched.dropOffAddress && formik.errors.dropOffAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.dropOffAddress}</div>
+                )}
               </div>
               <div className="grid-css grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1306,26 +1762,40 @@ export const Step2: React.FC<Step2Props> = ({
             </>
           ) : (
             <>
+              <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)]" >Pickup Details</h3>
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="pickupAddress">Pickup Address</Label>
                 <PlacesAutocomplete
-                  value={formData.pickupAddress}
+                  value={formik.values.pickupAddress}
                   states={companyDetails.states}
                   onChange={(place) => {
+                    const value =
+                      place?.structuredFormat?.mainText?.text ||
+                      place?.text?.text ||
+                      '';
+
+                    // Update Formik field
+                    formik.setFieldValue('pickupAddress', value);
+
+                    // Update custom formData state
                     handleInputChange({
                       target: {
-                        name: "pickupAddress",
-                        value:
-                          place?.structuredFormat?.mainText?.text ||
-                          place?.text?.text,
+                        name: 'pickupAddress',
+                        value,
                       },
                     });
+
+                    // If you need additional logic
                     changePickUpAddress(place);
                   }}
+
                 />
+                {formik.touched.pickupAddress && formik.errors.pickupAddress && (
+                  <div className="text-sm text-red-500">{formik.errors.pickupAddress}</div>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="font-semibold" htmlFor="pickupCity">Pickup City</Label>
                   <Input
@@ -1357,141 +1827,159 @@ export const Step2: React.FC<Step2Props> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                 <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
-              <div>
-                <DatePicker
-                  name={"pickupDate"}
-                  selected={
-                    new Date(convertDateFormatForSelected(formData.pickupDate))
-                  }
-                  value={convertDateFormat(formData.pickupDate)}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Choose a date"
-                  onChange={(val) => {
-                    handleInputChange({
-                      target: {
-                        name: "pickupDate",
-                        value: formatDateToYYYYMMDD(val),
-                      },
-                    });
-                  }}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
-              <div className="timeContainer">
-                <Input
-                  id="pickupTime"
-                  name="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={handleInputChange}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div className="timeInput">
-                <div
-                  className="timePickerContainer"
-                  onClick={() => handleTimeClick("pickup")}
-                >
-                  <Input
-                    ref={pickupTimeRef}
-                    id="pickupTimeMobile"
-                    name="pickupTime"
-                    type="time"
-                    value={formData.pickupTime}
-                    onChange={handleInputChange}
-                    required
-                    aria-required="true"
-                    onFocus={() => handleTimeFocus("pickup")}
-                    onBlur={() => handleTimeBlur("pickup")}
-                    className="timeInput mobile-time"
-                  />
-                  {!formData.pickupTime && !isPickupTimeFocused && (
-                    <div className="placeholder">Choose time</div>
-                  )}
                 </div>
-              </div>
-            </div>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" >
+                <div className=" space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                  <div>
+                    <DatePicker
+                      name={"pickupDate"}
+                      selected={
+                        formik.values.pickupDate
+                          ? new Date(convertDateFormatForSelected(formik.values.pickupDate))
+                          : null
+                      }
+                      value={convertDateFormat(formData.pickupDate)}
+                      dateFormat="yyyy-MM-dd"
+                      showYearDropdown
+                      className=""
+                      scrollableMonthYearDropdown
+                      placeholderText="Choose a date"
+                      onChange={(val) => {
+                        const formattedDate = formatDateToYYYYMMDD(val);
+
+                        // Update Formik and your custom state
+                        formik.setFieldValue("pickupDate", formattedDate);
+                        handleInputChange({
+                          target: {
+                            name: "pickupDate",
+                            value: formattedDate,
+                          },
+                        });
+                      }}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                    />
+                    {formik.touched.pickupDate && formik.errors.pickupDate && (
+                      <div className="text-sm text-red-500">{formik.errors.pickupDate}</div>
+                    )}
+                  </div>
+                </div>
+                <div className=" space-y-2">
+                  <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                  <div className="timeContainer">
+                    <Input
+                      id="pickupTime"
+                      name="pickupTime"
+                      type="time"
+                      value={formik.values.pickupTime}
+                      onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+
+                      required
+                      aria-required="true"
+                    />
+                    {formik.touched.pickupTime && formik.errors.pickupTime && (
+                      <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                    )}
+                  </div>
+                  <div className="timeInput">
+                    <div
+                      className="timePickerContainer"
+                      onClick={() => handleTimeClick("pickup")}
+                    >
+                      <Input
+                        ref={pickupTimeRef}
+                        id="pickupTimeMobile"
+                        name="pickupTime"
+                        type="time"
+                        value={formik.values.pickupTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("pickupTime", e.target.value) }}
+                        required
+                        aria-required="true"
+                        onFocus={() => handleTimeFocus("pickup")}
+                        onBlur={() => handleTimeBlur("pickup")}
+                        className="timeInput mobile-time"
+                      />
+                      {formik.touched.pickupTime && formik.errors.pickupTime && (
+                        <div className="text-sm text-red-500">{formik.errors.pickupTime}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                </div>
+              
             </>
           )}
           {formData.serviceType === "Hourly Trip" && (
             <div className="grid grid-cols-2 gap-3" >
-               <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
-              <div>
-                <DatePicker
-                  name={"pickupDate"}
-                  selected={
-                    new Date(convertDateFormatForSelected(formData.pickupDate))
-                  }
-                  value={convertDateFormat(formData.pickupDate)}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
-                  placeholderText="Choose a date"
-                  onChange={(val) => {
-                    handleInputChange({
-                      target: {
-                        name: "pickupDate",
-                        value: formatDateToYYYYMMDD(val),
-                      },
-                    });
-                  }}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
+
+              {/* <div className="flex-1 space-y-2">
+                <Label className="font-semibold" htmlFor="pickupDate">Pickup Date</Label>
+                <div>
+                  <DatePicker
+                    name={"pickupDate"}
+                    selected={
+                      new Date(convertDateFormatForSelected(formData.pickupDate))
+                    }
+                    value={convertDateFormat(formData.pickupDate)}
+                    dateFormat="yyyy-MM-dd"
+                    showYearDropdown
+                    scrollableMonthYearDropdown
+                    placeholderText="Choose a date"
+                    onChange={(val) => {
+                      handleInputChange({
+                        target: {
+                          name: "pickupDate",
+                          value: formatDateToYYYYMMDD(val),
+                        },
+                      });
+                    }}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
-              <div className="timeContainer">
-                <Input
-                  id="pickupTime"
-                  name="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={handleInputChange}
-                  required
-                  aria-required="true"
-                />
-              </div>
-              <div className="timeInput">
-                <div
-                  className="timePickerContainer"
-                  onClick={() => handleTimeClick("pickup")}
-                >
+              <div className="flex-1 space-y-2">
+                <Label className="font-semibold" htmlFor="pickupTime">Pickup Time</Label>
+                <div className="timeContainer">
                   <Input
-                    ref={pickupTimeRef}
-                    id="pickupTimeMobile"
+                    id="pickupTime"
                     name="pickupTime"
                     type="time"
                     value={formData.pickupTime}
                     onChange={handleInputChange}
                     required
                     aria-required="true"
-                    onFocus={() => handleTimeFocus("pickup")}
-                    onBlur={() => handleTimeBlur("pickup")}
-                    className="timeInput mobile-time"
                   />
-                  {!formData.pickupTime && !isPickupTimeFocused && (
-                    <div className="placeholder">Choose time</div>
-                  )}
                 </div>
-              </div>
-            </div>
+                <div className="timeInput">
+                  <div
+                    className="timePickerContainer"
+                    onClick={() => handleTimeClick("pickup")}
+                  >
+                    <Input
+                      ref={pickupTimeRef}
+                      id="pickupTimeMobile"
+                      name="pickupTime"
+                      type="time"
+                      value={formData.pickupTime}
+                      onChange={handleInputChange}
+                      required
+                      aria-required="true"
+                      onFocus={() => handleTimeFocus("pickup")}
+                      onBlur={() => handleTimeBlur("pickup")}
+                      className="timeInput mobile-time"
+                    />
+                    {!formData.pickupTime && !isPickupTimeFocused && (
+                      <div className="placeholder">Choose time</div>
+                    )}
+                  </div>
+                </div>
+              </div> */}
             </div>
           )}
-          {formData.serviceType !== "Hourly Trip" ? (
-            <>
+          {formData.serviceType !== "One-Way Trip to the Airport" && (
+            formData.serviceType !== "Hourly Trip" ? (
               <div className="space-y-2">
                 <Label className="font-semibold" htmlFor="extraStops">Extra Stops</Label>
                 <Input
@@ -1501,20 +1989,19 @@ export const Step2: React.FC<Step2Props> = ({
                   onChange={handleInputChange}
                 />
               </div>
-            </>
-          ) : (
-            <>
+            ) : (
               <div className="space-y-2">
-                <Label className="font-semibold" htmlFor="extraStops">Basic/ Brief Itinerary</Label>
+                <Label className="font-semibold" htmlFor="itinerary">Basic/ Brief Itinerary</Label>
                 <Input
-                  id="extraStops"
+                  id="itinerary"
                   name="itinerary"
                   value={formData.itinerary}
                   onChange={handleInputChange}
                 />
               </div>
-            </>
+            )
           )}
+
 
           {/* <div className="grid-css grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -1572,21 +2059,33 @@ export const Step2: React.FC<Step2Props> = ({
                         Drop-off Address
                       </Label>
                       <PlacesAutocomplete
-                        value={formData.dropOffAddress}
+                        value={formik.values.dropOffAddress}
                         states={companyDetails.states}
                         onChange={(place) => {
+                          const value =
+                            place?.structuredFormat?.mainText?.text ||
+                            place?.text?.text ||
+                            '';
+
+                          // Update Formik field
+                          formik.setFieldValue('dropOffAddress', value);
+
+                          // Update custom formData state
                           handleInputChange({
                             target: {
-                              name: "dropOffAddress",
-                              value:
-                                place?.structuredFormat?.mainText?.text ||
-                                place?.text?.text,
+                              name: 'dropOffAddress',
+                              value,
                             },
                           });
+
+                          // If you need additional logic
                           changeDropOffAddress(place);
                         }}
-                      />
 
+                      />
+                      {formik.touched.dropOffAddress && formik.errors.dropOffAddress && (
+                        <div className="text-sm text-red-500">{formik.errors.dropOffAddress}</div>
+                      )}
                       <div className="grid-css grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="font-semibold" htmlFor="pickupCity">Drop-Off City</Label>
@@ -1634,20 +2133,28 @@ export const Step2: React.FC<Step2Props> = ({
                         <Input
                           id="dropOffCity"
                           name="dropoffAirline"
-                          value={formData.dropoffAirline}
-                          onChange={handleInputChange}
+                          value={formik.values.dropoffAirline}
+
+                          onChange={(e) => { handleInputChange(e); formik.setFieldValue("dropoffAirline", e.target.value) }}
                           required
                           aria-required="true"
                         />
+                        {formik.touched.dropoffAirline && formik.errors.dropoffAirline && (
+                          <div className="text-sm text-red-500">{formik.errors.dropoffAirline}</div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="font-semibold" htmlFor="returnDropoffAirport">
                           Drop-off Airport
                         </Label>
                         <Select
-                          value={formData.dropoffAirport}
-                          onValueChange={(value) =>
-                            handleSelectChange("dropoffAirport", value)
+                          value={formik.values.dropoffAirport}
+                          name="dropoffAirport"
+                          onValueChange={(value) => {
+                            handleSelectChange("dropoffAirport", value);
+                              formik.setFieldValue("dropoffAirport", value);
+                          }
+
                           }
                         >
                           <SelectTrigger>
@@ -1661,6 +2168,9 @@ export const Step2: React.FC<Step2Props> = ({
                             ))}
                           </SelectContent>
                         </Select>
+                        {formik.touched.dropoffAirport && formik.errors.dropoffAirport && (
+                          <div className="text-sm text-red-500">{formik.errors.dropoffAirport}</div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -1672,11 +2182,14 @@ export const Step2: React.FC<Step2Props> = ({
                             id="dropOffDepartureTime"
                             name="dropOffDepartureTime"
                             type="time"
-                            value={formData.dropOffDepartureTime}
-                            onChange={handleInputChange}
+                            value={formik.values.dropOffDepartureTime}
+                            onChange={(e) => { handleInputChange(e); formik.setFieldValue("dropOffDepartureTime", e.target.value) }}
                             required
                             aria-required="true"
                           />
+                          {formik.touched.dropOffDepartureTime && formik.errors.dropOffDepartureTime && (
+                            <div className="text-sm text-red-500">{formik.errors.dropOffDepartureTime}</div>
+                          )}
                         </div>
                         <div className="timeInput">
                           <div
@@ -1688,15 +2201,19 @@ export const Step2: React.FC<Step2Props> = ({
                               id="dropOffDepartureTimeMobile"
                               name="dropOffDepartureTime"
                               type="time"
-                              value={formData.dropOffDepartureTime}
-                              onChange={handleInputChange}
+                              value={formik.values.dropOffDepartureTime}
+                              onChange={(e) => { handleInputChange(e); formik.setFieldValue("dropOffDepartureTime", e.target.value) }}
+
                               required
                               aria-required="true"
                               onFocus={() => handleTimeFocus("dropOffDeparture")}
                               onBlur={() => handleTimeBlur("dropOffDeparture")}
                               className="timeInput mobile-time"
                             />
-                            {!formData.dropOffDepartureTime &&
+                            {formik.touched.dropOffDepartureTime && formik.errors.dropOffDepartureTime && (
+                              <div className="text-sm text-red-500">{formik.errors.dropOffDepartureTime}</div>
+                            )}
+                            {!formik.values.dropOffDepartureTime &&
                               !isDropOffDepartureTimeFocused && (
                                 <div className="placeholder">Choose time</div>
                               )}
@@ -1717,9 +2234,15 @@ export const Step2: React.FC<Step2Props> = ({
                       <DatePicker
                         name={"returnDate"}
                         selected={
-                          new Date(
-                            convertDateFormatForSelected(formData.returnDate),
-                          )
+                          formik.values.returnDate
+                            ? new Date(
+                              convertDateFormatForSelected(
+                                formik.values.returnDate,
+                              ),
+                            )
+                            : null
+
+
                         }
                         value={convertDateFormat(formData.returnDate)}
                         dateFormat="yyyy-MM-dd"
@@ -1727,23 +2250,36 @@ export const Step2: React.FC<Step2Props> = ({
                         scrollableMonthYearDropdown
                         placeholderText="Choose a date"
                         onChange={(val) => {
+                          const formattedDate = formatDateToYYYYMMDD(val);
+
+                          // Update Formik and your custom state
+                          formik.setFieldValue("returnDate", formattedDate);
                           handleInputChange({
                             target: {
                               name: "returnDate",
-                              value: formatDateToYYYYMMDD(val),
+                              value: formattedDate,
                             },
                           });
                         }}
                       />
+                      {formik.touched.returnDate && formik.errors.returnDate && (
+                        <div className="text-sm text-red-500">{formik.errors.returnDate}</div>
+                      )}
                     </div>
 
                     <span className="dateInput">
                       <DatePicker
                         name={"returnDate"}
                         selected={
-                          new Date(
-                            convertDateFormatForSelected(formData.returnDate),
-                          )
+                          formik.values.returnDate
+                            ? new Date(
+                              convertDateFormatForSelected(
+                                formik.values.returnDate,
+                              ),
+                            )
+                            : null
+
+
                         }
                         value={convertDateFormat(formData.returnDate)}
                         dateFormat="yyyy-MM-dd"
@@ -1751,14 +2287,21 @@ export const Step2: React.FC<Step2Props> = ({
                         scrollableMonthYearDropdown
                         placeholderText="Choose a date"
                         onChange={(val) => {
+                          const formattedDate = formatDateToYYYYMMDD(val);
+
+                          // Update Formik and your custom state
+                          formik.setFieldValue("returnDate", formattedDate);
                           handleInputChange({
                             target: {
                               name: "returnDate",
-                              value: formatDateToYYYYMMDD(val),
+                              value: formattedDate,
                             },
                           });
                         }}
                       />
+                      {formik.touched.returnDate && formik.errors.returnDate && (
+                        <div className="text-sm text-red-500">{formik.errors.returnDate}</div>
+                      )}
                     </span>
                   </div>
                   <div className="flex-1 space-y-2">
@@ -1768,11 +2311,15 @@ export const Step2: React.FC<Step2Props> = ({
                         id="returnTime"
                         name="returnTime"
                         type="time"
-                        value={formData.returnTime}
-                        onChange={handleInputChange}
+                        value={formik.values.returnTime}
+                        onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnTime", e.target.value) }}
+
                         required
                         aria-required="true"
                       />
+                      {formik.touched.returnTime && formik.errors.returnTime && (
+                        <div className="text-sm text-red-500">{formik.errors.returnTime}</div>
+                      )}
                     </div>
                     <div className="timeInput">
                       <div
@@ -1784,17 +2331,22 @@ export const Step2: React.FC<Step2Props> = ({
                           id="returnTimeMobile"
                           name="returnTime"
                           type="time"
-                          value={formData.returnTime}
-                          onChange={handleInputChange}
+                          value={formik.values.returnTime}
+                          onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnTime", e.target.value) }}
+
                           required
                           aria-required="true"
                           onFocus={() => handleTimeFocus("return")}
                           onBlur={() => handleTimeBlur("return")}
                           className="timeInput mobile-time"
                         />
-                        {!formData.returnTime && !isReturnTimeFocused && (
-                          <div className="placeholder">Choose time</div>
+                        {formik.touched.returnTime && formik.errors.returnTime && (
+                          <div className="text-sm text-red-500">{formik.errors.returnTime}</div>
                         )}
+                        {!formik.values.returnTime &&
+                          !isReturnTimeFocused && (
+                            <div className="placeholder">Choose time</div>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -1807,31 +2359,41 @@ export const Step2: React.FC<Step2Props> = ({
                         <Input
                           id="dropOffCity"
                           name="returnAirline"
-                          value={formData.returnAirline}
-                          onChange={handleInputChange}
+                          value={formik.values.airlineName}
+                          onChange={(e) => { handleInputChange(e); formik.setFieldValue("airlineName", e.target.value) }}
+
                           required
                           aria-required="true"
                         />
+                        {formik.touched.airlineName && formik.errors.airlineName && (
+                          <div className="text-sm text-red-500">{formik.errors.airlineName}</div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="font-semibold" htmlFor="airlineName">Flight Number</Label>
                         <Input
                           id="returnFlightNumber"
                           name="returnFlightNumber"
-                          value={formData.returnFlightNumber}
-                          onChange={handleInputChange}
+                          value={formik.values.returnFlightNumber}
+                          onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnFlightNumber", e.target.value) }}
                           required
                           aria-required="true"
                         />
+                        {formik.touched.returnFlightNumber && formik.errors.returnFlightNumber && (
+                          <div className="text-sm text-red-500">{formik.errors.returnFlightNumber}</div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="font-semibold" htmlFor="returnPickupAirport">
                           Return Pickup Airport
                         </Label>
                         <Select
-                          value={formData.returnPickupAirport}
-                          onValueChange={(value) =>
+                          value={formik.values.returnPickupAirport}
+                          name="returnPickupAirport"
+                          onValueChange={(value) => {
                             handleSelectChange("returnPickupAirport", value)
+                            formik.setFieldValue("returnPickupAirport", value)
+                          }
                           }
                         >
                           <SelectTrigger>
@@ -1845,7 +2407,11 @@ export const Step2: React.FC<Step2Props> = ({
                             ))}
                           </SelectContent>
                         </Select>
+                        {formik.touched.returnPickupAirport && formik.errors.returnPickupAirport && (
+                          <div className="text-sm text-red-500">{formik.errors.returnPickupAirport}</div>
+                        )}
                       </div>
+
                     </>
                   ) : (
                     <>
@@ -1854,29 +2420,48 @@ export const Step2: React.FC<Step2Props> = ({
                           Return Pickup Address
                         </Label>
                         <PlacesAutocomplete
-                          value={formData.returnPickupAddress}
+                          value={formik.values.returnPickupAddress}
                           states={companyDetails.states}
                           onChange={(place) => {
+                            const value =
+                              place?.structuredFormat?.mainText?.text ||
+                              place?.text?.text ||
+                              '';
+
+                            // Update Formik field
+                            formik.setFieldValue('returnPickupAddress', value);
+
+                            // Update custom formData state
                             handleInputChange({
                               target: {
-                                name: "returnPickupAddress",
-                                value:
-                                  place?.structuredFormat?.mainText?.text ||
-                                  place?.text?.text,
+                                name: 'returnPickupAddress',
+                                value,
                               },
                             });
+
+                            // If you need additional logic
+                            changePickUpAddress(place);
                           }}
+
                         />
+                        {formik.touched.returnPickupAddress && formik.errors.returnPickupAddress && (
+                          <div className="text-sm text-red-500">{formik.errors.returnPickupAddress}</div>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="font-semibold" htmlFor="returnDropoffAirport">
                           Return Drop-off Airport
                         </Label>
                         <Select
-                          value={formData.dropoffAirport}
-                          onValueChange={(value) =>
+                          value={formik.values.returnDropoffAirport}
+                          name="returnDropoffAirport"
+                          onValueChange={(value) => {
                             handleSelectChange("dropoffAirport", value)
+                            formik.setFieldValue("returnDropoffAirport", value)
+
                           }
+                          }
+
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select airport" />
@@ -1889,6 +2474,9 @@ export const Step2: React.FC<Step2Props> = ({
                             ))}
                           </SelectContent>
                         </Select>
+                        {formik.touched.returnDropoffAirport && formik.errors.returnDropoffAirport && (
+                          <div className="text-sm text-red-500">{formik.errors.returnDropoffAirport}</div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -1896,11 +2484,14 @@ export const Step2: React.FC<Step2Props> = ({
                         <Input
                           id="returnFlightNumber"
                           name="returnFlightNumber"
-                          value={formData.returnFlightNumber}
-                          onChange={handleInputChange}
+                          value={formik.values.returnFlightNumber}
+                          onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnFlightNumber", e.target.value) }}
                           required
                           aria-required="true"
                         />
+                        {formik.touched.returnFlightNumber && formik.errors.returnFlightNumber && (
+                          <div className="text-sm text-red-500">{formik.errors.returnFlightNumber}</div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -1910,11 +2501,15 @@ export const Step2: React.FC<Step2Props> = ({
                             id="departureTime"
                             name="returnDepartureTime"
                             type="time"
-                            value={formData.returnDepartureTime}
-                            onChange={handleInputChange}
+                            value={formik.values.returnDepartureTime}
+                            onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnDepartureTime", e.target.value) }}
+
                             required
                             aria-required="true"
                           />
+                          {formik.touched.returnDepartureTime && formik.errors.returnDepartureTime && (
+                            <div className="text-sm text-red-500">{formik.errors.returnDepartureTime}</div>
+                          )}
                         </div>
                         <div className="timeInput">
                           <div
@@ -1926,15 +2521,19 @@ export const Step2: React.FC<Step2Props> = ({
                               id="departureTimeMobile"
                               name="returnDepartureTime"
                               type="time"
-                              value={formData.returnDepartureTime}
-                              onChange={handleInputChange}
+                              value={formik.values.returnDepartureTime}
+                              onChange={(e) => { handleInputChange(e); formik.setFieldValue("returnDepartureTime", e.target.value) }}
+
                               required
                               aria-required="true"
                               onFocus={() => handleTimeFocus("departure")}
                               onBlur={() => handleTimeBlur("departure")}
                               className="timeInput mobile-time"
                             />
-                            {!formData.returnDepartureTime &&
+                            {formik.touched.returnDepartureTime && formik.errors.returnDepartureTime && (
+                              <div className="text-sm text-red-500">{formik.errors.returnDepartureTime}</div>
+                            )}
+                            {!formik.values.returnDepartureTime &&
                               !isDepartureTimeFocused && (
                                 <div className="placeholder">Choose time</div>
                               )}
@@ -1950,38 +2549,64 @@ export const Step2: React.FC<Step2Props> = ({
                         Return Pickup Address
                       </Label>
                       <PlacesAutocomplete
-                        value={formData.returnPickupAddress}
+                        value={formik.values.returnPickupAddress}
                         states={companyDetails.states}
                         onChange={(place) => {
+                          const value =
+                            place?.structuredFormat?.mainText?.text ||
+                            place?.text?.text ||
+                            '';
+
+                          // Update Formik field
+                          formik.setFieldValue('returnPickupAddress', value);
+
+                          // Update custom formData state
                           handleInputChange({
                             target: {
-                              name: "returnPickupAddress",
-                              value:
-                                place?.structuredFormat?.mainText?.text ||
-                                place?.text?.text,
+                              name: 'returnPickupAddress',
+                              value,
                             },
                           });
+
+                          // If you need additional logic
+                          changePickUpAddress(place);
                         }}
                       />
+                      {formik.touched.returnPickupAddress && formik.errors.returnPickupAddress && (
+                        <div className="text-sm text-red-500">{formik.errors.returnPickupAddress}</div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label className="font-semibold" htmlFor="returnDropoffAddress">
                         Return Drop-off Address
                       </Label>
                       <PlacesAutocomplete
-                        value={formData.returnDropoffAddress}
+                        value={formik.values.returnDropoffAddress}
                         states={companyDetails.states}
                         onChange={(place) => {
+                          const value =
+                            place?.structuredFormat?.mainText?.text ||
+                            place?.text?.text ||
+                            '';
+
+                          // Update Formik field
+                          formik.setFieldValue('returnDropoffAddress', value);
+
+                          // Update custom formData state
                           handleInputChange({
                             target: {
-                              name: "returnDropoffAddress",
-                              value:
-                                place?.structuredFormat?.mainText?.text ||
-                                place?.text?.text,
+                              name: 'returnDropoffAddress',
+                              value,
                             },
                           });
+
+                          // If you need additional logic
+                          changeDropOffAddress(place);
                         }}
                       />
+                      {formik.touched.returnDropoffAddress && formik.errors.returnDropoffAddress && (
+                        <div className="text-sm text-red-500">{formik.errors.returnDropoffAddress}</div>
+                      )}
                     </div>
                   </>
                 )}
@@ -1990,50 +2615,92 @@ export const Step2: React.FC<Step2Props> = ({
           )}
 
         {/* Contact Information */}
-        {/* <div className="space-y-4" aria-label="Contact Information">
-          <h3 className="text-lg font-semibold">Contact Information</h3>
-          <div className="grid-css grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="font-semibold" htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                aria-required="true"
-                maxLength={60}
-              />
+        <div className="space-y-4" aria-label="Contact Information">
+          <div className="space-y-4" aria-label="Contact Information">
+            <h3 className="text-lg font-semibold text-[rgba(0,37,153,1)]" >Contact Information</h3>
+            <div className="grid-css grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-semibold" htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formik.values.name}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("name", e.target.value) }}
+                  required
+                  aria-required="true"
+                  maxLength={60}
+                />
+                {formik.touched.name && formik.errors.name && (
+                  <div className="text-sm text-red-500">{formik.errors.name}</div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="font-semibold" htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formik.values.email}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("email", e.target.value) }}
+                  required
+                  aria-required="true"
+                />
+                {formik.touched.email && formik.errors.email && (
+                  <div className="text-sm text-red-500">{formik.errors.email}</div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="font-semibold" htmlFor="phone">Phone</Label>
+                <PhoneInput
+                  country={"us"}
+                  value={formik.values.phone}
+                  onChange={(phone) => {
+                    handleInputChange({ target: { name: "phone", value: phone } })
+                    formik.setFieldValue("phone", phone)
+                  }
+                  }
+                  inputProps={{
+                    name: "phone",
+                    required: true,
+                    "aria-required": "true",
+                  }}
+                />
+                {formik.touched.phone && formik.errors.phone && (
+                  <div className="text-sm text-red-500">{formik.errors.phone}</div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="font-semibold" htmlFor="passengerNames">Passenger Names</Label>
+                <Input
+                  id="passengerNames"
+                  name="passengerNames"
+                  value={formik.values.passengerNames}
+                  onChange={(e) => { handleInputChange(e); formik.setFieldValue("passengerNames", e.target.value) }}
+
+                  required
+                  aria-required="true"
+                  maxLength={60}
+                />
+                {formik.touched.passengerNames && formik.errors.passengerNames && (
+                  <div className="text-sm text-red-500">{formik.errors.passengerNames}</div>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="font-semibold" htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                aria-required="true"
-              />
-            </div>
+
+
+
           </div>
+          {/* Additional Notes */}
           <div className="space-y-2">
-            <Label className="font-semibold" htmlFor="phone">Phone</Label>
-            <PhoneInput
-              country={"us"}
-              value={formData.phone}
-              onChange={(phone) =>
-                handleInputChange({ target: { name: "phone", value: phone } })
-              }
-              inputProps={{
-                name: "phone",
-                required: true,
-                "aria-required": "true",
-              }}
+            <Label className="font-semibold" htmlFor="additionalNotes">Additional Notes</Label>
+            <Input
+              id="additionalNotes"
+              name="additionalNotes"
+              value={formData.additionalNotes}
+              onChange={handleInputChange}
             />
           </div>
-        </div> */}
+        </div>
         {/* Additional Notes */}
         {/* <div className="space-y-2">
           <Label className="font-semibold" htmlFor="additionalNotes">Additional Notes</Label>
@@ -2057,13 +2724,13 @@ export const Step2: React.FC<Step2Props> = ({
           )}
 
         {/* Display validation errors */}
-        <div aria-live="assertive">
+        {/* <div aria-live="assertive">
           {Object.keys(errors).map((key) => (
             <p key={key} className="text-sm text-red-500">
               {errors[key]}
             </p>
           ))}
-        </div>
+        </div> */}
       </div>
       <div className="mt-4 flex justify-between">
         <Button
@@ -2076,16 +2743,20 @@ export const Step2: React.FC<Step2Props> = ({
           }}
           variant="outline"
           aria-label="Go back to previous step"
+          className="h-[44px] w-[75px] text-[#344054] font-[600] text-[16px] border-[#002599]  "
         >
           Back
         </Button>
         <Button
           type="button"
-          onClick={handleNext}
-          className="bg-[rgba(0,37,153,1)] text-white"
+          onClick={() => formik.handleSubmit()}
+          className="bg-[rgba(0,37,153,1)]  text-[16px] fornt-[600] text-white w-[118px] h-[44px] "
           aria-label="Proceed to next step"
         >
-        {steps[step + 1] ? `${steps[step + 1]} →` : "Finish"}
+          <div className="flex items-center justify-between" >
+          {steps[step + 1] ? `${steps[step + 1]}` : "Finish"}
+           <img src="/images/Arrow right.png" className="pl-2" />
+          </div>
         </Button>
       </div>
       {minimumHoursWarning.show && (

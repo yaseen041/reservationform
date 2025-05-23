@@ -175,7 +175,7 @@ export const Step3: React.FC<Step3Props> = ({
                 newErrors.pickupAddress = "Pickup Address is required"
             }
         }
-        if(!formData.passengerNames)
+        if (!formData.passengerNames)
             newErrors.passengerNames = "Passenger Names is required"
         if (!formData.email) {
             newErrors.email = "Email is required";

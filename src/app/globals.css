@@ -32,7 +32,9 @@
     --tw-ring-color: var(--yelp-red);
   }
   
-  
+  body{
+    font-family: 'Inter', sans-serif;
+  }
 .mySwiper{
     height: 200px;
 }
@@ -40,7 +42,9 @@
 .react-datepicker-wrapper{
   width: 98%;
 }
-
+.label-2{
+  display: none;
+}
 .react-datepicker__input-container{
   position: relative !important;
   width: 100% !important;
@@ -56,6 +60,7 @@
   outline: none;
   cursor: pointer;
 }
+
 
 
 @media screen and (max-width: 500px){
@@ -108,7 +113,7 @@
 
 @media screen and (max-width: 500px){
   .hourly-media{
-    width: 340px;
+    width: 100%;
   }
 
   .dateContainer{
@@ -197,6 +202,15 @@
   }
 
   .timeInput {
+    display: block;
+  }
+}
+
+@media screen and (max-width:449px) {
+  .label-1{
+    display: none;
+  }
+  .label-2{
     display: block;
   }
 }

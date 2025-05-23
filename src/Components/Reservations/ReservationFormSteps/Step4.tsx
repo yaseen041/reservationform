@@ -24,62 +24,71 @@ export const Step4: React.FC<Step4Props> = ({
         return (
           <>
             <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
-              <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Pickup Details</h4>
+              <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Pickup & Dropoff</h4>
               <p>
-                <strong>Date & Time:</strong>{" "}
-                {formatDateForSummary(formData.pickupDate)},{" "}
-                {formatTime(formData.pickupTime)}
-              </p>
-              <p>
-                <strong>Pickup Airport:</strong> {formData.pickupAirport}
+                <strong className="text-[16px] font-[600] " >Pick up Date:</strong>{" "}
+                {formatDateForSummary(formData.pickupDate)}
+               
               </p>
 
+                <p>
+                <strong className="text-[16px] font-[600] " >Pickup Time:</strong>{" "}
+                 {formatTime(formData.pickupTime)}
+               
+              </p>
               <p>
-                <strong>Airline:</strong> {formData.airlineName}{" "}
+                <strong className="text-[16px] font-[600] " >Airline Name:</strong> {formData.airlineName}
                 {formData.flightNumber && `(Flight ${formData.flightNumber})`}
               </p>
               <p>
-                <strong>Arrival Time:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Flight Number:</strong> {formData.flightNumber}
+              
+              </p>
+              <p>
+                <strong className="text-[16px] font-[600] " >Arrival Time:</strong>{" "}
                 {formatTime(formData.airlineArrivalTime)}
               </p>
-            </div>
-            <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
-              <h4 className="mb-2 text-lg font-semibold">Drop-off Details</h4>
-              <p>
-                <strong>Drop-off Address:</strong> {formData.dropOffAddress},{" "}
+               <p>
+                <strong className="text-[16px] font-[600] " >Drop-off Address:</strong> {formData.dropOffAddress},{" "}
                 {formData.dropoffCity}, {formData.dropoffState}
               </p>
+              {formData.extraStops &&(
+                  <p>
+                <strong className="text-[16px] font-[600] " >Extra Stops:</strong> {formData.extraStops}
+              </p>
+              )}
             </div>
+          
           </>
         );
       case "One-Way Trip to the Airport":
         return (
           <>
             <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
-              <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)] ">Pickup & Dropoff</h4>
+              <h4 className="mb-2 text-[16px] font-[600] text-[rgba(0,37,153,1)] ">Pickup & Dropoff</h4>
               <div className="grid-css grid grid-cols-2" >
                 <p>
-                  <strong>Pickup Address:</strong> {formData.pickupAddress},{" "}
+                  <strong className="text-[16px] font-[600] " >Pickup Address:</strong> {formData.pickupAddress},{" "}
                   {formData.pickupCity}, {formData.pickupState}
                 </p>
                 <p>
-                  <strong>Airline:</strong> {formData.airlineName}
+                  <strong className="text-[16px] font-[600] " >Airline:</strong> {formData.airlineName}
                 </p>
               </div>
               <div className="grid grid-cols-2" >
                 <p>
-                  <strong> Pickup Date:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " > Pickup Date:</strong>{" "}
                   {formatDateForSummary(formData.pickupDate)}
 
                 </p>
                 <p>
-                  <strong>Departure Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Departure Time:</strong>{" "}
                   {formatTime(formData.airlineDepartureTime)}
                 </p>
               </div>
               <div className="grid grid-cols-2" >
                 <p>
-                  <strong>Pickup Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Pickup Time:</strong>{" "}
                   {formatTime(formData.pickupTime)}
                 </p>
               </div>
@@ -92,7 +101,7 @@ export const Step4: React.FC<Step4Props> = ({
              
             
               <p>
-                <strong>Departure Time:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Departure Time:</strong>{" "}
                 {formatTime(formData.airlineDepartureTime)}
               </p>
             </div> */}
@@ -104,17 +113,17 @@ export const Step4: React.FC<Step4Props> = ({
             <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
               <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Outbound Trip</h4>
               <p>
-                <strong>Date & Time:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                 {formatDateForSummary(formData.pickupDate)},{" "}
                 {formatTime(formData.pickupTime)}
               </p>
               <p>
-                <strong>Pickup Address:</strong> {formData.pickupAddress},{" "}
+                <strong className="text-[16px] font-[600] " >Pickup Address:</strong> {formData.pickupAddress},{" "}
                 {formData.pickupCity}, {formData.pickupState}
               </p>
 
               <p>
-                <strong>Drop-off Address:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Drop-off Address:</strong>{" "}
                 {formData.returnPickupAddress}, {formData.dropoffCity},{" "}
                 {formData.dropoffState}
               </p>
@@ -122,17 +131,17 @@ export const Step4: React.FC<Step4Props> = ({
             <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
               <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Return Trip</h4>
               <p>
-                <strong>Date & Time:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                 {formatDateForSummary(formData.returnDate)},{" "}
                 {formatTime(formData.returnTime)}
               </p>
               <p>
-                <strong>Pickup Address:</strong> {formData.returnPickupAddress},{" "}
+                <strong className="text-[16px] font-[600] " >Pickup Address:</strong> {formData.returnPickupAddress},{" "}
                 {formData.pickupCity}, {formData.dropoffCity}
               </p>
 
               <p>
-                <strong>Drop-off Address:</strong>{" "}
+                <strong className="text-[16px] font-[600] " >Drop-off Address:</strong>{" "}
                 {formData.returnDropoffAddress}, {formData.dropoffCity},{" "}
                 {formData.dropoffState}
               </p>
@@ -148,23 +157,23 @@ export const Step4: React.FC<Step4Props> = ({
                   Outbound Trip (To Airport)
                 </h4>
                 <p>
-                  <strong>Date & Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                   {formatDateForSummary(formData.pickupDate)},{" "}
                   {formatTime(formData.pickupTime)}
                 </p>
                 <p>
-                  <strong>Pickup Address:</strong> {formData.pickupAddress},{" "}
+                  <strong className="text-[16px] font-[600] " >Pickup Address:</strong> {formData.pickupAddress},{" "}
                   {formData.pickupCity}, {formData.pickupState}
                 </p>
 
                 <p>
-                  <strong>Drop-off Airport:</strong> {formData.dropoffAirport}
+                  <strong className="text-[16px] font-[600] " >Drop-off Airport:</strong> {formData.dropoffAirport}
                 </p>
                 <p>
-                  <strong>Airline:</strong> {formData.dropoffAirline}
+                  <strong className="text-[16px] font-[600] " >Airline:</strong> {formData.dropoffAirline}
                 </p>
                 <p>
-                  <strong>Departure Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Departure Time:</strong>{" "}
                   {formatTime(formData.dropOffDepartureTime)}
                 </p>
               </div>
@@ -173,21 +182,21 @@ export const Step4: React.FC<Step4Props> = ({
                   Return Trip (From Airport)
                 </h4>
                 <p>
-                  <strong>Date & Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                   {formatDateForSummary(formData.returnDate)},{" "}
                   {formatTime(formData.returnTime)}
                 </p>
                 <p>
-                  <strong>Pickup Airport:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Pickup Airport:</strong>{" "}
                   {formData.returnPickupAirport}
                 </p>
 
                 <p>
-                  <strong>Airline:</strong> {formData.returnAirline} (Flight{" "}
+                  <strong className="text-[16px] font-[600] " >Airline:</strong> {formData.returnAirline} (Flight{" "}
                   {formData.returnFlightNumber})
                 </p>
                 <p>
-                  <strong>Drop-off Address:</strong> {formData.pickupAddress},{" "}
+                  <strong className="text-[16px] font-[600] " >Drop-off Address:</strong> {formData.pickupAddress},{" "}
                   {formData.pickupCity}, {formData.pickupState}
                 </p>
               </div>
@@ -201,24 +210,24 @@ export const Step4: React.FC<Step4Props> = ({
                   Outbound Trip (From Airport)
                 </h4>
                 <p>
-                  <strong>Date & Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                   {formatDateForSummary(formData.pickupDate)},{" "}
                   {formatTime(formData.pickupTime)}
                 </p>
                 <p>
-                  <strong>Pickup Airport:</strong> {formData.pickupAirport}
+                  <strong className="text-[16px] font-[600] " >Pickup Airport:</strong> {formData.pickupAirport}
                 </p>
 
                 <p>
-                  <strong>Airline:</strong> {formData.airlineName}{" "}
+                  <strong className="text-[16px] font-[600] " >Airline:</strong> {formData.airlineName}{" "}
                   {formData.flightNumber && `(Flight ${formData.flightNumber})`}
                 </p>
                 <p>
-                  <strong>Arrival Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Arrival Time:</strong>{" "}
                   {formatTime(formData.airlineArrivalTime)}
                 </p>
                 <p>
-                  <strong>Drop-off Address:</strong> {formData.dropOffAddress},{" "}
+                  <strong className="text-[16px] font-[600] " >Drop-off Address:</strong> {formData.dropOffAddress},{" "}
                   {formData.dropoffCity}, {formData.dropoffState}
                 </p>
               </div>
@@ -227,21 +236,21 @@ export const Step4: React.FC<Step4Props> = ({
                   Return Trip (To Airport)
                 </h4>
                 <p>
-                  <strong>Date & Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Date & Time:</strong>{" "}
                   {formatDateForSummary(formData.returnDate)},{" "}
                   {formatTime(formData.returnTime)}
                 </p>
                 <p>
-                  <strong>Pickup Address:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Pickup Address:</strong>{" "}
                   {formData.returnPickupAddress}, {formData.dropoffCity},{" "}
                   {formData.dropoffState}
                 </p>
 
                 <p>
-                  <strong>Drop-off Airport:</strong> {formData.dropoffAirport}
+                  <strong className="text-[16px] font-[600] " >Drop-off Airport:</strong> {formData.dropoffAirport}
                 </p>
                 <p>
-                  <strong>Departure Time:</strong>{" "}
+                  <strong className="text-[16px] font-[600] " >Departure Time:</strong>{" "}
                   {formatTime(formData.returnDepartureTime)}
                 </p>
               </div>
@@ -253,35 +262,35 @@ export const Step4: React.FC<Step4Props> = ({
         return (
           <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
             <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Pickup & Dropoff</h4>
-             <p>
-              <strong>Pickup Address:</strong> {formData.pickupAddress},{" "}
+            <p>
+              <strong className="text-[16px] font-[600] " >Pickup Address:</strong> {formData.pickupAddress},{" "}
               {formData.pickupCity}, {formData.pickupState}
             </p>
             <p>
-              <strong>Pickup Date:</strong>{" "}
+              <strong className="text-[16px] font-[600] " >Pickup Date:</strong>{" "}
               {formatDateForSummary(formData.pickupDate)}
             </p>
             <p>
-              <strong>Pickup Time:</strong>{" "}
+              <strong className="text-[16px] font-[600] " >Pickup Time:</strong>{" "}
               {formatTime(formData.pickupTime)}
             </p>
             {formData.serviceType !== "Hourly Trip" ? (
               <>
                 <p>
-                  <strong>Drop-off Address:</strong> {formData.dropOffAddress},{" "}
+                  <strong className="text-[16px] font-[600] " >Drop-off Address:</strong> {formData.dropOffAddress},{" "}
                   {formData.dropoffCity}, {formData.dropoffState}
                 </p>
               </>
             ) : (
               <>
                 <p>
-                 
-                  <strong>Basic/Brief Itinerary:</strong> {formData.itinerary}
+
+                  <strong className="text-[16px] font-[600] " >Basic/Brief Itinerary:</strong> {formData.itinerary}
                 </p>
               </>
             )}
 
-           
+
           </div>
         );
       default:
@@ -293,71 +302,88 @@ export const Step4: React.FC<Step4Props> = ({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-[20px] font-semibold text-[rgba(0,37,153,1)] ">Reservation Summary</h3>
+      <h3 className="text-[20px] font-[600] text-[rgba(0,37,153,1)] ">Reservation Summary</h3>
 
       <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
-        <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)] ">Ride Details</h4>
+        <h4 className="mb-2 text-[16px] font-[600] text-[rgba(0,37,153,1)] ">Ride Details</h4>
         <p  >
-          <strong>Service Type:</strong> {formData.serviceType}
+          <strong className="text-[16px] font-[600] " >Service Type:</strong> {formData.serviceType}
         </p>
+        {formData.serviceType === "One-Way Trip from the Airport" && (
+          <p>
+            <strong className="text-[16px] font-[600] " >Pickup Airport:</strong> {formData.pickupAirport}
+          </p>
+        )}
         {formData.serviceType === "One-Way Trip to the Airport" && (
           <p>
-            <strong>Drop off Airport:</strong> {formData.dropoffAirport}
+            <strong className="text-[16px] font-[600] " >Drop off Airport:</strong> {formData.dropoffAirport}
           </p>
         )}
         {formData.serviceType === "Hourly Trip" && (
-              <p>
-                <strong>Duration:</strong> {formData.tripDuration} hours
-              </p>
-            )}
+          <p>
+            <strong className="text-[16px] font-[600] " >Duration:</strong> {formData.tripDuration} hours
+          </p>
+        )}
         <p>
-          <strong>Number of Passengers:</strong> {formData.numberOfPassengers}
+          <strong className="text-[16px] font-[600] " >No of Passengers:</strong> {formData.numberOfPassengers}
         </p>
         {formData.lugage !== 0 && (
           <p>
-            <strong>luggage:</strong> {formData.lugage}
+            <strong className="text-[16px] font-[600] " >luggage:</strong> {formData.lugage}
           </p>
         )}
-         <p>
-          <strong>Vehicle:</strong> {formData.vehicleType}
+        <p>
+          <strong className="text-[16px] font-[600] " >Vehicle:</strong> {formData.vehicleType}
         </p>
-       
-        {formData.extraStops && (
+
+        {/* {formData.extraStops && (
           <p>
-            <strong>Extra Stops:</strong> {formData.extraStops}
+            <strong className="text-[16px] font-[600] " >Extra Stops:</strong> {formData.extraStops}
           </p>
-        )}
+        )} */}
       </div>
 
       {renderTripDetails()}
 
       <div className="mb-4 rounded-lg bg-[rgba(243,247,254,1)] p-4">
-        <h4 className="mb-2 text-[16px] font-bold text-[rgba(0,37,153,1)]">Contact Information</h4>
-        <p>
-          <strong>Name:</strong> {formData.name}
-        </p>
-        <p>
-          <strong>Email:</strong> {formData.email}
-        </p>
-        <p>
-          <strong>Phone:</strong> {formatPhoneNumber(formData.phone)}
-        </p>
-         <p>
-          <strong>Passenger Names:</strong> {formData.passengerNames}
-        </p>
-         {formData.additionalNotes && (
-       
+        <h4 className="mb-2 text-[16px] font-[600] text-[rgba(0,37,153,1)]">Contact Information</h4>
+        <div className="grid grid-cols-2" >
           <p>
-             <strong>Additional Notes:</strong>{" "}
+            <strong className="text-[16px] font-[600] " >Name:</strong> {formData.name}
+          </p>
+          {(formData.serviceType !== "Hourly Trip" && formData.serviceType !=="One-Way Trip from the Airport") && (
+            <p>
+              <strong className="text-[16px] font-[600] " >Passenger Names:</strong> {formData.passengerNames}
+            </p>
+          )}
+        </div>
+
+        <p>
+          <strong className="text-[16px] font-[600] " >Email:</strong> {formData.email}
+        </p>
+        <p>
+          <strong className="text-[16px] font-[600] " >Phone:</strong> {formatPhoneNumber(formData.phone)}
+        </p>
+        {(formData.serviceType === "Hourly Trip" || formData.serviceType==="One-Way Trip from the Airport") && (
+          <p>
+            <strong className="text-[16px] font-[600] " >Passenger Names:</strong> {formData.passengerNames}
+          </p>
+        )}
+
+
+        {formData.additionalNotes && (
+
+          <p>
+            <strong className="text-[16px] font-[600] " >Additional Notes:</strong>{" "}
             {formData.additionalNotes}</p>
-        
-      )}
+
+        )}
       </div>
 
-     
+
 
       <div className="mt-6 flex justify-between">
-        <Button type="button" onClick={() => setStep(2)} variant="outline">
+        <Button type="button" onClick={() => setStep(1)} variant="outline" className="text-[#344054] border-[#002599] w-[75px] h-[44px] text-[16px] font-[600] " >
           Back
         </Button>
         <div className="flex gap-3">
@@ -374,7 +400,7 @@ export const Step4: React.FC<Step4Props> = ({
                 {loader === ReservationSubmitLoaderType.SEND_QUOTE
                   ? "ing"
                   : ""}{" "}
-                 {`Submit →`}
+                <div className="flex items-center justify-between" >{"Submit"}  <img src="/images/Arrow right.png" className="pl-2" /></div>
               </button>
             </>
           )}
@@ -383,7 +409,7 @@ export const Step4: React.FC<Step4Props> = ({
             name="action"
             value="submit"
             type="submit"
-            className="bg-[rgba(0,37,153,1)] text-white"
+            className="bg-[rgba(0,37,153,1)] text-white w-[117px] h-[44px] text-[16px] font-[600] "
             disabled={loader?.length > 0}
           >
             {loader === ReservationSubmitLoaderType.ADD ||
@@ -391,7 +417,8 @@ export const Step4: React.FC<Step4Props> = ({
               ? "Loading..."
               : formData?.price
                 ? "Make a Payment →"
-                : "Submit →"}
+                
+                : <div className="flex items-center justify-between" >{"Submit"}  <img src="/images/Arrow right.png" className="pl-2" /></div>}
           </Button>
         </div>
       </div>

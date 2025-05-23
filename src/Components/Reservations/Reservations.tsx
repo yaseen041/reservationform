@@ -13,7 +13,7 @@ import {
 } from "@/Types"
 import { Step1 } from "./ReservationFormSteps/Step1"
 import { Step2 } from "./ReservationFormSteps/Step2"
-import { Step3 } from "./ReservationFormSteps/Step3"
+// import { Step3 } from "./ReservationFormSteps/Step3"
 import { Step4 } from "./ReservationFormSteps/Step4"
 import axios from "axios"
 import { FileWarningIcon, Check } from "lucide-react"
@@ -38,13 +38,12 @@ type VehicleDataType = {
 const steps = [
     "Ride Details",
     "Pickup & Drop off details",
-    "Contact Information",
     "Review"
 ]
 
 interface CompanyDetailsType {
-  luggageField: boolean;
-  states: string[];
+    luggageField: boolean;
+    states: string[];
 }
 export default function ReservationForm({
     serviceType,
@@ -68,10 +67,10 @@ export default function ReservationForm({
     const [discount, setDiscount] = useState(null);
     const [discountLoader, setDiscountLoader] = useState(true);
     const [loader, setLoader] = useState<ReservationSubmitLoaderType | "">("");
-     const [companyDetails, setCompanyDetails] = useState<CompanyDetailsType>({
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetailsType>({
         luggageField: false,
         states: [],
-      });
+    });
     console.log(errors)
 
     const [companyData, setCompanyData] = useState<companyDataType>({
@@ -228,61 +227,62 @@ export default function ReservationForm({
     }
 
     const renderProgressBar = () => {
-        
-     return (
-          <div className="w-full max-w-4xl mx-auto mt-8 mb-8 ">
-      {/* Stepper */}
-      <div className="flex items-start justify-between relative">
-        {steps.map((label, index) => (
-          <div key={index} className="flex-1 flex flex-col items-center justify-start relative min-w-0">
-            {/* Connector line */}
-            {index !== 0 && (
-              <div className="absolute top-4 -left-1/2 w-full h-0.5 bg-gray-300 z-0 overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ease-in-out ${
-                    index <= step ? "bg-[rgba(0,62,179,1)] w-full" : "bg-gray-300 w-full"
-                  }`}
-                />
-              </div>
-            )}
 
-            {/* Step Circle */}
-            <div className="relative flex items-center justify-center">
-              {index === step && (
-                <div className="absolute w-10 h-10 rounded-full bg-[rgba(0,62,179,0.24)] z-0" />
-              )}
-              <div
-                className={`w-8 h-8 flex items-center justify-center rounded-full border-2 z-10
-                  ${
-                    index < step
-                      ? "bg-[rgba(0,62,179,1)] border-[rgba(0,62,179,1)] text-white"
-                      : index === step
-                      ? "bg-[rgba(0,62,179,1)] border-[rgba(0,62,179,1)] text-white"
-                      : "bg-gray-200 border-gray-300 text-gray-500"
-                  }`}
-              >
-                {index < step ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <div
-                    className={`h-3 w-3 rounded-full ${
-                      index === step ? "bg-white" : "bg-gray-300"
-                    }`}
-                  />
-                )}
-              </div>
-            </div>
+        return (
+            <div className="w-full max-w-4xl mx-auto mt-8 mb-8 ">
 
-            {/* Step Label */}
-            <span className={`mt-2 text-xs sm:text-sm md:text-base font-semibold text-center ${index<step || index===step?"text-[rgba(0,62,179,1)]":"text-[rgba(52,64,84,1)]" }  break-words `}>
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
+                <div className="flex items-start justify-between relative">
+                    {steps.map((label, index) => (
+                        <div key={index} className="flex-1 flex flex-col items-center justify-start relative min-w-0">
+                            {index !== 0 && (
+                                <div className={`absolute  top-4 ${step === 0 ? "-left-[62%] w-[123%]" : "-left-1/2 w-full "}   h-0.5 bg-gray-300 z-0 overflow-hidden`}>
+                                    <div
+                                        className={`h-full transition-all duration-500 ease-in-out
+        ${step === 0 && index === 1
+                                                ? "bg-[rgba(0,62,179,1)] w-1/2"
+                                                : index <= step
+                                                    ? "bg-[rgba(0,62,179,1)] w-full"
+                                                    : "bg-gray-300 w-full"
+                                            }`}
+                                    />
+                                </div>
+                            )}
 
-      {/* Navigation Buttons */}
-      {/* <div className="flex justify-center gap-4 mt-6">
+
+                            <div className="relative flex items-center justify-center">
+                                {index === step && (
+                                    <div className="absolute w-10 h-10 rounded-full bg-[rgba(0,62,179,0.24)] z-0" />
+                                )}
+                                <div
+                                    className={`w-8 h-8 flex items-center justify-center rounded-full border-2 z-10
+                  ${index < step
+                                            ? "bg-[rgba(0,62,179,1)] border-[rgba(0,62,179,1)] text-white"
+                                            : index === step
+                                                ? "bg-[rgba(0,62,179,1)] border-[rgba(0,62,179,1)] text-white"
+                                                : "bg-gray-200 border-gray-300 text-gray-500"
+                                        }`}
+                                >
+                                    {index < step ? (
+                                        <Check className="w-4 h-4" />
+                                    ) : (
+                                        <div
+                                            className={`h-3 w-3 rounded-full ${index === step ? "bg-white" : "bg-gray-300"
+                                                }`}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Step Label */}
+                            <span className={`mt-2 text-[16px] font-semibold text-center ${index < step || index === step ? "text-[rgba(0,62,179,1)]" : "text-[rgba(52,64,84,1)]"}  break-words `}>
+                                {label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Navigation Buttons */}
+                {/* <div className="flex justify-center gap-4 mt-6">
         <button
           className="px-4 py-2 border rounded text-sm disabled:opacity-50"
           onClick={() => setStep((prev) => Math.max(prev - 1, 0))}
@@ -299,13 +299,13 @@ export default function ReservationForm({
           {steps[step + 1] ? `${steps[step + 1]} →` : "Finish"}
         </button>
       </div> */}
-    </div>
+            </div>
         )
     }
 
 
 
- 
+
 
     const getFormInfo = () => {
         axios
@@ -455,15 +455,15 @@ export default function ReservationForm({
                         <>
                             {discount !== 0 ?
                                 <>
-                                    <CardTitle className="text-md md:text-xl" > Please enter the details below to get a quote!</CardTitle>
+                                    <CardTitle className="text-[18px]" style={{fontWeight:500}}  > Please enter the details below to get a quote!</CardTitle>
 
                                 </> :
                                 <>
-                                    <CardTitle className="text-md md:text-xl" > Please enter the details below to get a quote!</CardTitle>
+                                    <CardTitle className="text-[18px]" style={{fontWeight:500}}  > Please enter the details below to get a quote!</CardTitle>
                                 </>}
                         </>
                     ) : (
-                        <CardTitle className="text-md md:text-xl" > Please enter the details below to get a quote!</CardTitle>
+                        <CardTitle className="text-[18px]" style={{fontWeight:500}}  > Please enter the details below to get a quote!</CardTitle>
                     )}
                 </CardHeader>
                 {!error ? (
@@ -483,8 +483,9 @@ export default function ReservationForm({
                                         setStep1Error={setStep1Error}
                                         step={step}
                                         steps={steps}
-                                         vehicles={vehicles}
+                                        vehicles={vehicles}
                                         companyDetails={companyDetails}
+                                        setFormData={setFormData}
                                     />
                                 )}
                                 {step === 1 && (
@@ -514,11 +515,11 @@ export default function ReservationForm({
                                             steps={steps}
                                             setCompanyDetails={setCompanyDetails}
                                             companyDetails={companyDetails}
-                                            
+
                                         />
                                     </>
                                 )}
-                                {step===2 &&(
+                                {/* {step===2 &&(
                                     <Step3 
                                      formData={formData}
                                             handleInputChange={handleInputChange}
@@ -541,7 +542,7 @@ export default function ReservationForm({
                                             steps={steps}
                                             setCompanyDetails={setCompanyDetails}
                                     />
-                                )}
+                                )} */}
                                 {completedForm === true && step === 4 ? (
                                     <>
                                         <ThankYouPage
@@ -551,7 +552,7 @@ export default function ReservationForm({
                                             customer={customer}
                                         />
                                     </>
-                                ) : step === 3 ? (
+                                ) : step === 2 ? (
                                     <>
                                         <Step4 formData={formData} setStep={setStep} loader={loader} customer={customer} />
                                     </>

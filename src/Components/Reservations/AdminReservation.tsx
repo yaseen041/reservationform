@@ -363,7 +363,8 @@ export default function AdminReservation({
                                         states={states}
                                         serviceType={serviceType}
                                         setStep1Error={setStep1Error}
-                                        vehicles={vehicles} steps={[]} step={0} companyDetails={{}}                                    />
+                                        vehicles={vehicles} steps={[]} step={0} companyDetails={{}} 
+                                        setFormData={setFormData}                                   />
                                 )}
                                 {step === 2 && (
                                     <>
